@@ -54,6 +54,7 @@ app.get('/api/search', (req, res) => {
   let params = [];
 
   if (q) {
+    // Search in ALL fields including channel (coaches like Ben Askren, Bo Nickel)
     conditions.push(`(title LIKE ? OR description LIKE ? OR tags LIKE ? OR move_type LIKE ? OR channel LIKE ? OR category LIKE ?)`);
     const wild = `%${q}%`;
     params.push(wild, wild, wild, wild, wild, wild);
@@ -78,6 +79,20 @@ app.get('/api/moves/:category', (req, res) => {
   res.json(moves.map(m => m.move_type));
 });
 
+app.get('/api/coaches', (req, res) => {
+  const coaches = db.prepare(`
+    SELECT channel, COUNT(*) as count 
+    FROM videos 
+    WHERE channel IS NOT NULL AND channel != ''
+    GROUP BY channel 
+    ORDER BY count DESC
+  `).all();
+  res.json(coaches.map(c => ({
+    name: c.channel,
+    count: c.count
+  })));
+});
+
 app.post('/api/vote/:id', (req, res) => {
   const { vote } = req.body; // 'up' or 'down'
   const videoId = req.params.id;
@@ -89,11 +104,52 @@ app.post('/api/vote/:id', (req, res) => {
   res.json(formatVideo(video));
 });
 
+app.post('/api/moves', (req, res) => {
+  const { name, category, position, difficulty, style, keywords } = req.body;
+  
+  const moveId = name.toLowerCase().replace(/[^a-z0-9]+/g, '_');
+  const tags = `${name}, ${position}, ${difficulty}, ${category}, folkstyle`;
+  
+  const stmt = db.prepare(`
+    INSERT INTO videos (
+      youtube_id, title, category, move_type, position, difficulty, 
+      move_id, tags, style, source_type
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+  
+  try {
+    stmt.run(moveId, name, category, name, position, difficulty, moveId, tags, style || 'folkstyle', 'custom');
+    res.json({ success: true, moveId, name });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
 app.get('/api/stats', (req, res) => {
   const total = db.prepare('SELECT COUNT(*) as count FROM videos').get().count;
   const byCat = db.prepare('SELECT category, COUNT(*) as count FROM videos WHERE category IS NOT NULL GROUP BY category').all();
   const topRated = db.prepare('SELECT * FROM videos ORDER BY rating DESC LIMIT 5').all();
-  res.json({ total, byCat, topRated: topRated.map(formatVideo) });
+  
+  // Top coaches
+  const topCoaches = db.prepare(`
+    SELECT channel, COUNT(*) as count 
+    FROM videos 
+    WHERE channel IS NOT NULL AND channel != ''
+    GROUP BY channel 
+    ORDER BY count DESC 
+    LIMIT 10
+  `).all();
+  
+  res.json({ 
+    total, 
+    byCat, 
+    topRated: topRated.map(formatVideo),
+    topCoaches: topCoaches.map(c => ({
+      name: c.channel,
+      count: c.count
+    }))
+  });
 });
 
 function formatVideo(v) {
