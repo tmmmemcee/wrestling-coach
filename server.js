@@ -248,6 +248,34 @@ function formatVideo(v) {
 
 app.listen(PORT, () => {
   console.log(`🤼 Wrestling Coach running at http://localhost:${PORT}`);
+  
+  // Seed lesson plans if empty
+  const lessonCount = db.prepare('SELECT COUNT(*) as count FROM lesson_plans').get().count;
+  if (lessonCount === 0) {
+    try {
+      const seedPath = path.join(__dirname, 'seed_lesson_plans.json');
+      if (require('fs').existsSync(seedPath)) {
+        const lessonPlans = JSON.parse(require('fs').readFileSync(seedPath, 'utf8'));
+        for (const plan of lessonPlans) {
+          const result = db.prepare(`
+            INSERT INTO lesson_plans (name, description, difficulty, category, age_group, notes, is_template)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+          `).run(plan.name, plan.description, plan.difficulty, plan.category, plan.age_group || 'elementary (6-10)', plan.notes, plan.is_template);
+          
+          const planId = result.lastInsertRowid;
+          for (const [idx, video] of plan.videos.entries()) {
+            db.prepare(`
+              INSERT INTO plan_videos (lesson_plan_id, video_id, order_num, notes)
+              VALUES (?, ?, ?, ?)
+            `).run(planId, video.video_id, idx, video.notes);
+          }
+        }
+        console.log(`📚 Seeded ${lessonPlans.length} lesson plans`);
+      }
+    } catch (e) {
+      console.log('Note: Could not seed lesson plans:', e.message);
+    }
+  }
 });
 
 module.exports = { db };

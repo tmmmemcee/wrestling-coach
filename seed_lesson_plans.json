@@ -1,0 +1,121 @@
+[
+  {
+    "name": "Week 1, Lesson 1: Stance, Motion & Balance",
+    "description": "Establish proper wrestling stance and movement fundamentals",
+    "difficulty": "beginner",
+    "category": "fundamentals",
+    "notes": "Core foundation - practice in front of mirror. Feet shoulder-width apart, knees bent, back straight, hands up. Each drill: 3 sets of 30 seconds.",
+    "is_template": 1,
+    "videos": [
+      {"video_id": 26, "notes": "Wrestling Stance For Beginners - Core foundation"},
+      {"video_id": 126, "notes": "The Essentials of a Wrestling Stance - Focus on feet position"},
+      {"video_id": 128, "notes": "Stance and Motion Drills - Practice 3 sets of 30 seconds"},
+      {"video_id": 127, "notes": "Practice Proper Wrestling Stance and Motion - Common mistakes"}
+    ]
+  },
+  {
+    "name": "Week 1, Lesson 2: Level Change & Penetration Step",
+    "description": "Learn the fundamental shooting motion for all takedowns",
+    "difficulty": "beginner",
+    "category": "fundamentals",
+    "notes": "Level change = bend knees, not waist. Penetration step should be explosive. Keep head up. Practice 10 reps each side.",
+    "is_template": 1,
+    "videos": [
+      {"video_id": 130, "notes": "Level Change - What NOT to do first"},
+      {"video_id": 29, "notes": "Penetration Step by Adam Wheeler - #1 most important skill"},
+      {"video_id": 131, "notes": "Split Step Level Change - Cary Kolat timing details"},
+      {"video_id": 134, "notes": "Penetration Step Power Leg - Focus on power leg"}
+    ]
+  },
+  {
+    "name": "Week 1, Lesson 3: Hand Fighting & Ties",
+    "description": "Learn to control ties and create scoring opportunities",
+    "difficulty": "beginner",
+    "category": "fundamentals",
+    "notes": "Control the inside position. Keep elbows tight. Use head as a weapon. Create angles for shots.",
+    "is_template": 1,
+    "videos": [
+      {"video_id": 33, "notes": "Hand Fighting Blueprint - Core concepts"},
+      {"video_id": 136, "notes": "Hand Fighting Head Control - Cary Kolat - Head = control"},
+      {"video_id": 142, "notes": "Jordan Burroughs Hand Fighting Mastery - Learn timing from the best"}
+    ]
+  },
+  {
+    "name": "Week 2, Lesson 4: Single Leg Takedown",
+    "description": "Master the most fundamental takedown in wrestling",
+    "difficulty": "beginner",
+    "category": "takedowns",
+    "notes": "Penetration step to outside. Grab behind the knee. Put head on inside. Drive through the leg. Drill 20 reps each side.",
+    "is_template": 1,
+    "videos": [
+      {"video_id": 2, "notes": "Perfect Single Leg for Beginners - Best beginner breakdown"},
+      {"video_id": 66, "notes": "5 Minutes of Pure Single Leg Technique - Watch different finishes"},
+      {"video_id": 116, "notes": "Single Leg Defense - Whizzer basics - Learn defense too"}
+    ]
+  },
+  {
+    "name": "Week 2, Lesson 5: Double Leg Takedown",
+    "description": "Learn wrestling's most explosive takedown",
+    "difficulty": "beginner",
+    "category": "takedowns",
+    "notes": "Change level BEFORE shooting. Head to the side, not chest. Grab behind both knees. Drive and lift. Drill 15 reps each side.",
+    "is_template": 1,
+    "videos": [
+      {"video_id": 4, "notes": "Double Leg Take Down Basics - Simple, clear instruction"},
+      {"video_id": 68, "notes": "Double Leg Youth Wrestling Technique - Specifically for youth"},
+      {"video_id": 135, "notes": "Penetration Step & Level Change - Combines all Week 1-2 skills"}
+    ]
+  },
+  {
+    "name": "Week 2, Lesson 6: Sprawling & Takedown Defense",
+    "description": "Learn to stop shots and create counter opportunities",
+    "difficulty": "beginner",
+    "category": "defense",
+    "notes": "Hips DOWN when opponent shoots. Hands on shoulders. Spin behind for 2 points. Never get flattened. Drill sprawls: 3 sets of 10.",
+    "is_template": 1,
+    "videos": [
+      {"video_id": 21, "notes": "Sprawl by Ben Askren - Best sprawl instruction"},
+      {"video_id": 114, "notes": "Wrestling Sprawl Secrets - John Smith's legendary defense"},
+      {"video_id": 20, "notes": "Best Sprawl Position - Cary Kolat hip positioning"}
+    ]
+  },
+  {
+    "name": "Week 3, Lesson 7: Stand-Up Escape",
+    "description": "Master the most important escape from bottom position",
+    "difficulty": "beginner",
+    "category": "escapes",
+    "notes": "Create space first. Stand up in one motion. Hand control is key. Don't get pulled back down. Drill 15 reps each side.",
+    "is_template": 1,
+    "videos": [
+      {"video_id": 95, "notes": "Stand Up Escape Basics - Foundation of all escapes"},
+      {"video_id": 18, "notes": "How To Get Away From Everyone - David Carr NCAA champion"},
+      {"video_id": 94, "notes": "Why Beginners Get Stuck on Bottom - Common mistakes"}
+    ]
+  },
+  {
+    "name": "Week 3, Lesson 8: Sit-Out & Switch",
+    "description": "Learn alternative escapes when stand-up isn't available",
+    "difficulty": "beginner",
+    "category": "escapes",
+    "notes": "Sit-out when opponent rides high. Turn in to face opponent. Switch when opponent reaches. Always be moving on bottom.",
+    "is_template": 1,
+    "videos": [
+      {"video_id": 98, "notes": "Sit Out, Turn In, Back Door - Multiple escape options"},
+      {"video_id": 105, "notes": "Sit Out Hip Heist Recovery - Cary Kolat hip movement"},
+      {"video_id": 107, "notes": "Wrestling Reversals: The Switch - Classic reversal technique"}
+    ]
+  },
+  {
+    "name": "Week 3, Lesson 9: Half Nelson Pin",
+    "description": "Learn wrestling's most basic and effective pinning combination",
+    "difficulty": "beginner",
+    "category": "pins",
+    "notes": "Control the wrist first. Slide arm under arm. Apply pressure with forearm. Walk toward opponent's head. Drill 20 reps.",
+    "is_template": 1,
+    "videos": [
+      {"video_id": 13, "notes": "Youth Wrestling Half Nelson Pin - Specifically for youth"},
+      {"video_id": 14, "notes": "Half Nelson Tutorial Youth Wrestling - Step-by-step breakdown"},
+      {"video_id": 143, "notes": "Half Nelson Tutorial Wrestling Fundamentals - Common variations"}
+    ]
+  }
+]
