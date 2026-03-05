@@ -23,7 +23,6 @@
     .form-control:focus, .form-select:focus { background: var(--darker); color: white; border-color: var(--primary); }
     .btn-wrestling { background: var(--primary); border-color: var(--primary); color: white; }
     .btn-wrestling:hover { background: #c73652; border-color: #c73652; color: white; }
-    .btn-success { background: #28a745; border-color: #28a745; }
     h2 { color: var(--primary); }
   </style>
 </head>
@@ -39,14 +38,14 @@
 </nav>
 
 <div class="container admin-container">
-  <h2 class="mt-4">📝 Add New Move</h2>
+  <h2 class="mt-4">📝 Add New Custom Move</h2>
   <div class="card mt-3">
-    <div class="card-header">Add a Custom Move</div>
+    <div class="card-header">Add a Custom Wrestling Move to the Library</div>
     <div class="card-body">
       <form id="addMoveForm">
         <div class="mb-3">
           <label class="form-label">Move Name *</label>
-          <input type="text" class="form-control" id="moveName" required placeholder="e.g., Cow Catcher, Stack, Gutwrench">
+          <input type="text" class="form-control" id="moveName" required placeholder="e.g., Cow Catcher, Stack, Headlock, Front Head Position">
         </div>
         
         <div class="row">
@@ -72,6 +71,7 @@
               <option value="neutral">Neutral</option>
               <option value="top">Top (Offense)</option>
               <option value="bottom">Bottom (Defense)</option>
+              <option value="front_head">Front Head (Head Control)</option>
             </select>
           </div>
         </div>
@@ -99,40 +99,36 @@
         </div>
         
         <div class="mb-3">
-          <label class="form-label">Keywords (comma-separated) *</label>
-          <input type="text" class="form-control" id="keywords" required placeholder="e.g., cow catcher, cowcatcher, crotch catch">
+          <label class="form-label">Search Keywords (comma-separated) *</label>
+          <input type="text" class="form-control" id="keywords" required placeholder="e.g., cow catcher, cowcatcher, crotch catch, front head, head control">
+          <div class="form-text text-muted">Used to find this move when searching</div>
         </div>
         
-        <div class="alert alert-info">
-          <strong>Keywords:</strong> Comma-separated terms that will be used to auto-tag this move when searching.<br>
-          <em>Example: For "Cow Catcher", use: "cow catcher, cowcatcher, crotch catch"</em>
-        </div>
-        
-        <button type="submit" class="btn btn-wrestling w-100">Add Move to Taxonomy</button>
+        <button type="submit" class="btn btn-wrestling w-100">Add Move to Library</button>
       </form>
       
       <div id="successMessage" class="alert alert-success mt-3" style="display: none;">
-        ✅ Move added successfully! <br>
-        <small>Go back home to see the new move in the category.</small>
+        ✅ Move added successfully!<br>
+        <small>Go back home to see the new move.</small>
       </div>
     </div>
   </div>
   
   <div class="card mt-4">
-    <div class="card-header">Current Taxonomy Statistics</div>
+    <div class="card-header">Library Statistics</div>
     <div class="card-body">
       <div class="row text-center">
         <div class="col-4">
           <h4 id="totalMoves">0</h4>
-          <p class="text-muted">Total Moves</p>
-        </div>
-        <div class="col-4">
-          <h4 id="totalVideos">0</h4>
-          <p class="text-muted">Videos</p>
+          <p class="text-muted">Total Videos</p>
         </div>
         <div class="col-4">
           <h4 id="totalCategories">0</h4>
           <p class="text-muted">Categories</p>
+        </div>
+        <div class="col-4">
+          <h4 id="totalCoaches">0</h4>
+          <p class="text-muted">Coaches</p>
         </div>
       </div>
     </div>
@@ -145,28 +141,21 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-// Load stats on page load
 document.addEventListener('DOMContentLoaded', async () => {
   try {
     const statsRes = await fetch('/api/stats');
     const stats = await statsRes.json();
-    document.getElementById('totalVideos').textContent = stats.total;
+    document.getElementById('totalMoves').textContent = stats.total;
+    document.getElementById('totalCoaches').textContent = stats.topCoaches?.length || 0;
     
     const categoriesRes = await fetch('/api/categories');
     const categories = await categoriesRes.json();
     document.getElementById('totalCategories').textContent = categories.length;
-    
-    // Count moves per category for total
-    const movesCount = categories.reduce((sum, cat) => {
-      return sum + 1; // Simplified - actual count would be more complex
-    }, 0);
-    document.getElementById('totalMoves').textContent = '> 50'; // Approximate from taxonomy
   } catch (e) {
     console.error('Error loading stats:', e);
   }
 });
 
-// Handle form submission
 document.getElementById('addMoveForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   
@@ -201,8 +190,7 @@ document.getElementById('addMoveForm').addEventListener('submit', async (e) => {
     // Reload stats
     const statsRes = await fetch('/api/stats');
     const stats = await statsRes.json();
-    document.getElementById('totalMoves').textContent = '> 50';
-    
+    document.getElementById('totalMoves').textContent = stats.total;
   } catch (error) {
     alert('Error adding move: ' + error.message);
   }
