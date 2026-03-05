@@ -43,6 +43,7 @@
     <div class="navbar-nav ms-auto">
       <a class="nav-link" href="/">Home</a>
       <a class="nav-link active" href="/matches.html">Matches</a>
+      <a class="nav-link" href="/lesson-plans.html">Lesson Plans</a>
       <a class="nav-link" href="/coaches.html">Coaches</a>
       <a class="nav-link" href="/admin.html">Admin</a>
     </div>
@@ -64,44 +65,21 @@
     
     <!-- Quick match types -->
     <div class="d-flex flex-wrap justify-content-center gap-2 mt-2">
-      <button class="btn tag-btn btn-sm" onclick="quickSearch('championship match')">Championship</button>
-      <button class="btn tag-btn btn-sm" onclick="quickSearch('national tournament')">Nationals</button>
-      <button class="btn tag-btn btn-sm" onclick="quickSearch('match breakdown')">Match Breakdown</button>
-      <button class="btn tag-btn btn-sm" onclick="quickSearch('live competition')">Live Competition</button>
+      <button class="btn tag-btn btn-sm" onclick="quickSearch('championship')">Championship</button>
+      <button class="btn tag-btn btn-sm" onclick="quickSearch('finals')">Finals</button>
+      <button class="btn tag-btn btn-sm" onclick="quickSearch('NCAA')">NCAA</button>
+      <button class="btn tag-btn btn-sm" onclick="quickSearch('Olympic')">Olympic</button>
+      <button class="btn tag-btn btn-sm" onclick="quickSearch('World Championship')">Worlds</button>
     </div>
   </div>
 </div>
 
 <div class="container py-4">
-  <!-- Filters -->
-  <div class="row mb-4 g-2">
-    <div class="col-6 col-md-4">
-      <label>Difficulty</label>
-      <select class="form-select filter-select" id="fDiff" onchange="searchMatches()">
-        <option value="">All levels</option>
-        <option>high school</option>
-        <option>collegiate</option>
-        <option>international</option>
-        <option>olympic</option>
-      </select>
-    </div>
-    <div class="col-6 col-md-4">
-      <label>Sort By</label>
-      <select class="form-select filter-select" id="fSort" onchange="searchMatches()">
-        <option value="rating">Most Rated</option>
-        <option value="newest">Newest First</option>
-        <option value="longest">Longest Videos</option>
-      </select>
-    </div>
-    <div class="col-12 col-md-4 d-flex align-items-end">
-      <a href="/" class="btn btn-outline-light w-100">← Back to Home</a>
-    </div>
-  </div>
-
   <!-- Results -->
   <div id="results">
-    <div class="text-center py-5 text-muted">
-      <p>🥊 Choose a search term or filter above to find match footage</p>
+    <div class="text-center py-5">
+      <div class="spinner-border" style="color:#e94560;"></div>
+      <p class="mt-2 text-muted">Loading matches...</p>
     </div>
   </div>
 </div>
@@ -151,9 +129,33 @@ function searchMatches() {
       <p class="mt-2 text-muted">Searching matches...</p>
     </div>`;
   
-  fetch('/api/search?content_type=match&' + (q ? 'q=' + encodeURIComponent(q) : ''))
+  // Search for matches - using 'match' as content_type
+  let url = '/api/search?content_type=match';
+  if (q) url += '&q=' + encodeURIComponent(q);
+  
+  fetch(url)
     .then(r => r.json())
-    .then(render)
+    .then(videos => {
+      if (!videos.length) {
+        // If no matches found, try searching by title/description containing "match"
+        fetch('/api/search?q=match')
+          .then(r => r.json())
+          .then(allMatchVideos => {
+            if (allMatchVideos.length) {
+              render(allMatchVideos);
+            } else {
+              document.getElementById('results').innerHTML = `
+                <div class="text-center py-5">
+                  <p class="text-muted mb-3">No match footage found in the library yet.</p>
+                  <p class="text-muted small">Match videos need to be added via Admin or crawler.</p>
+                  <a href="/admin.html" class="btn btn-outline-light mt-2">Add Match Videos</a>
+                </div>`;
+            }
+          });
+      } else {
+        render(videos);
+      }
+    })
     .catch(() => {
       document.getElementById('results').innerHTML =
         `<div class="alert alert-danger">Failed to load matches.</div>`;
@@ -200,6 +202,9 @@ function showMatch(id, youtubeId, title, duration) {
 document.getElementById('videoModal').addEventListener('hide.bs.modal', () => {
   document.getElementById('modalFrame').src = '';
 });
+
+// Load matches on page load
+searchMatches();
 </script>
 </body>
 </html>
