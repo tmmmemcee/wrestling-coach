@@ -1,0 +1,492 @@
+{
+  "folkstyle_taxonomy": {
+    "pins": {
+      "name": "Pins",
+      "description": "Holds used to pin an opponent's shoulders to the mat",
+      "moves": [
+        {
+          "id": "half_nelson",
+          "name": "Half Nelson",
+          "aliases": ["half-nelson", "half nelson"],
+          "keywords": ["half nelson", "half-nelson", "halfnelson"],
+          "difficulty": "beginner",
+          "position": "top"
+        },
+        {
+          "id": "power_half",
+          "name": "Power Half Nelson",
+          "aliases": ["power half"],
+          "keywords": ["power half", "power nelson"],
+          "difficulty": "intermediate",
+          "position": "top"
+        },
+        {
+          "id": "double_chicken_wing",
+          "name": "Double Chicken Wing",
+          "aliases": ["chicken wing", "dcw"],
+          "keywords": ["chicken wing", "double chicken", "chickenwing"],
+          "difficulty": "advanced",
+          "position": "top"
+        },
+        {
+          "id": "bar_arm",
+          "name": "Bar Arm",
+          "aliases": ["bar-arm"],
+          "keywords": ["bar arm", "bar-arm"],
+          "difficulty": "intermediate",
+          "position": "top"
+        },
+        {
+          "id": "arm_bar",
+          "name": "Arm Bar",
+          "aliases": ["armbar", "arm-bar"],
+          "keywords": ["arm bar", "armbar", "arm-bar"],
+          "difficulty": "intermediate",
+          "position": "top"
+        },
+        {
+          "id": "cradle",
+          "name": "Cradle",
+          "aliases": ["near side cradle", "far side cradle"],
+          "keywords": ["cradle", "near cradle", "far cradle"],
+          "difficulty": "beginner",
+          "position": "top"
+        },
+        {
+          "id": "tight_waist",
+          "name": "Tight Waist",
+          "aliases": ["tight-waist"],
+          "keywords": ["tight waist", "tight-waist"],
+          "difficulty": "beginner",
+          "position": "top"
+        },
+        {
+          "id": "spladle",
+          "name": "Spladle",
+          "aliases": [],
+          "keywords": ["spladle", "split cradle"],
+          "difficulty": "advanced",
+          "position": "top"
+        },
+        {
+          "id": "cement_mixer",
+          "name": "Cement Mixer",
+          "aliases": ["cement job"],
+          "keywords": ["cement mixer", "cement job"],
+          "difficulty": "advanced",
+          "position": "top"
+        },
+        {
+          "id": "bow_and_arrow",
+          "name": "Bow and Arrow",
+          "aliases": ["bow & arrow"],
+          "keywords": ["bow and arrow", "bow & arrow"],
+          "difficulty": "intermediate",
+          "position": "top"
+        },
+        {
+          "id": "spiral_breakdown",
+          "name": "Spiral Breakdown",
+          "aliases": ["spiral ride"],
+          "keywords": ["spiral breakdown", "spiral ride"],
+          "difficulty": "beginner",
+          "position": "top"
+        },
+        {
+          "id": "turk",
+          "name": "Turk",
+          "aliases": ["turk ride"],
+          "keywords": ["turk", "turk ride"],
+          "difficulty": "intermediate",
+          "position": "top"
+        }
+      ]
+    },
+    "tilts": {
+      "name": "Tilts",
+      "description": "Turning moves to expose opponent's back",
+      "moves": [
+        {
+          "id": "wrist_tilt",
+          "name": "Wrist Tilt",
+          "aliases": ["wrist and tilt"],
+          "keywords": ["wrist tilt", "wrist and tilt", "cross wrist tilt"],
+          "difficulty": "beginner",
+          "position": "top"
+        },
+        {
+          "id": "2_on_1_tilt",
+          "name": "2-on-1 Tilt",
+          "aliases": ["two on one tilt"],
+          "keywords": ["2-on-1 tilt", "2 on 1 tilt", "two on one tilt"],
+          "difficulty": "intermediate",
+          "position": "top"
+        },
+        {
+          "id": "leg_tilt",
+          "name": "Leg Tilt",
+          "aliases": ["turk and tilt"],
+          "keywords": ["leg tilt", "turk and tilt"],
+          "difficulty": "advanced",
+          "position": "top"
+        },
+        {
+          "id": "deep_half_tilt",
+          "name": "Deep Half Tilt",
+          "aliases": [],
+          "keywords": ["deep half tilt"],
+          "difficulty": "advanced",
+          "position": "top"
+        }
+      ]
+    },
+    "takedowns": {
+      "name": "Takedowns",
+      "description": "Moves to take opponent down from neutral position",
+      "moves": [
+        {
+          "id": "single_leg",
+          "name": "Single Leg Takedown",
+          "aliases": ["single", "single-leg"],
+          "keywords": ["single leg", "single-leg", "singles"],
+          "difficulty": "beginner",
+          "position": "neutral"
+        },
+        {
+          "id": "double_leg",
+          "name": "Double Leg Takedown",
+          "aliases": ["double", "double-leg"],
+          "keywords": ["double leg", "double-leg", "doubles"],
+          "difficulty": "beginner",
+          "position": "neutral"
+        },
+        {
+          "id": "ankle_pick",
+          "name": "Ankle Pick",
+          "aliases": ["ankle-pick"],
+          "keywords": ["ankle pick", "ankle-pick"],
+          "difficulty": "beginner",
+          "position": "neutral"
+        },
+        {
+          "id": "firemans_carry",
+          "name": "Fireman's Carry",
+          "aliases": ["firemans", "fireman carry"],
+          "keywords": ["fireman's carry", "firemans carry", "fireman carry"],
+          "difficulty": "intermediate",
+          "position": "neutral"
+        },
+        {
+          "id": "duck_under",
+          "name": "Duck Under",
+          "aliases": ["duck-under", "superduck"],
+          "keywords": ["duck under", "duck-under", "superduck", "duck walk"],
+          "difficulty": "intermediate",
+          "position": "neutral"
+        },
+        {
+          "id": "high_crotch",
+          "name": "High Crotch",
+          "aliases": ["high-crotch"],
+          "keywords": ["high crotch", "high-crotch"],
+          "difficulty": "intermediate",
+          "position": "neutral"
+        },
+        {
+          "id": "low_single",
+          "name": "Low Single",
+          "aliases": ["low-single"],
+          "keywords": ["low single", "low-single"],
+          "difficulty": "advanced",
+          "position": "neutral"
+        },
+        {
+          "id": "sweep_single",
+          "name": "Sweep Single",
+          "aliases": ["sweep-single"],
+          "keywords": ["sweep single", "sweep-single"],
+          "difficulty": "advanced",
+          "position": "neutral"
+        },
+        {
+          "id": "blast_double",
+          "name": "Blast Double",
+          "aliases": ["blast-double"],
+          "keywords": ["blast double", "blast-double"],
+          "difficulty": "intermediate",
+          "position": "neutral"
+        },
+        {
+          "id": "snap_down",
+          "name": "Snap Down",
+          "aliases": ["snapdown", "snap-down"],
+          "keywords": ["snap down", "snapdown", "snap-down"],
+          "difficulty": "beginner",
+          "position": "neutral"
+        },
+        {
+          "id": "shuck_by",
+          "name": "Shuck By",
+          "aliases": ["shuck-by"],
+          "keywords": ["shuck by", "shuck-by", "shuck"],
+          "difficulty": "intermediate",
+          "position": "neutral"
+        },
+        {
+          "id": "arm_drag",
+          "name": "Arm Drag",
+          "aliases": ["arm-drag"],
+          "keywords": ["arm drag", "arm-drag"],
+          "difficulty": "intermediate",
+          "position": "neutral"
+        },
+        {
+          "id": "russian_tie",
+          "name": "Russian Tie",
+          "aliases": ["russian arm"],
+          "keywords": ["russian tie", "russian arm"],
+          "difficulty": "advanced",
+          "position": "neutral"
+        }
+      ]
+    },
+    "escapes": {
+      "name": "Escapes",
+      "description": "Moves to escape from bottom position",
+      "moves": [
+        {
+          "id": "stand_up",
+          "name": "Stand Up",
+          "aliases": ["stand-up", "standup"],
+          "keywords": ["stand up", "stand-up", "standup", "get to feet"],
+          "difficulty": "beginner",
+          "position": "bottom"
+        },
+        {
+          "id": "switch",
+          "name": "Switch",
+          "aliases": ["wizzer switch"],
+          "keywords": ["switch", "switch move", "hit a switch"],
+          "difficulty": "beginner",
+          "position": "bottom"
+        },
+        {
+          "id": "sit_out",
+          "name": "Sit Out",
+          "aliases": ["sit-out", "situ"],
+          "keywords": ["sit out", "sit-out", "situ"],
+          "difficulty": "beginner",
+          "position": "bottom"
+        },
+        {
+          "id": "granby",
+          "name": "Granby Roll",
+          "aliases": ["granby"],
+          "keywords": ["granby", "granby roll"],
+          "difficulty": "intermediate",
+          "position": "bottom"
+        },
+        {
+          "id": "hip_heist",
+          "name": "Hip Heist",
+          "aliases": ["hip-heist"],
+          "keywords": ["hip heist", "hip-heist"],
+          "difficulty": "intermediate",
+          "position": "bottom"
+        },
+        {
+          "id": "peterson",
+          "name": "Peterson Roll",
+          "aliases": ["peterson"],
+          "keywords": ["peterson roll", "peterson"],
+          "difficulty": "advanced",
+          "position": "bottom"
+        },
+        {
+          "id": "quarters",
+          "name": "Quarters Position",
+          "aliases": ["quarter turn"],
+          "keywords": ["quarters", "quarter turn"],
+          "difficulty": "beginner",
+          "position": "bottom"
+        }
+      ]
+    },
+    "reversals": {
+      "name": "Reversals",
+      "description": "Moves to reverse from bottom to top position",
+      "moves": [
+        {
+          "id": "switch_reversal",
+          "name": "Switch Reversal",
+          "aliases": ["switch to top"],
+          "keywords": ["switch reversal", "switch for reversal"],
+          "difficulty": "intermediate",
+          "position": "bottom"
+        },
+        {
+          "id": "sit_out_turn_in",
+          "name": "Sit Out Turn In",
+          "aliases": ["sit out turn"],
+          "keywords": ["sit out turn in", "sit out turn"],
+          "difficulty": "intermediate",
+          "position": "bottom"
+        },
+        {
+          "id": "whip_over",
+          "name": "Whip Over",
+          "aliases": ["whip"],
+          "keywords": ["whip over", "whip"],
+          "difficulty": "intermediate",
+          "position": "bottom"
+        },
+        {
+          "id": "tight_waist_reversal",
+          "name": "Tight Waist Reversal",
+          "aliases": ["tight waist turn"],
+          "keywords": ["tight waist reversal", "tight waist turn"],
+          "difficulty": "advanced",
+          "position": "bottom"
+        }
+      ]
+    },
+    "top_riding": {
+      "name": "Top Riding",
+      "description": "Techniques for maintaining control on top",
+      "moves": [
+        {
+          "id": "leg_ride",
+          "name": "Leg Ride",
+          "aliases": ["legs in", "riding legs"],
+          "keywords": ["leg ride", "leg riding", "legs in", "riding legs"],
+          "difficulty": "intermediate",
+          "position": "top"
+        },
+        {
+          "id": "boot_scoot",
+          "name": "Boot Scoot",
+          "aliases": ["boot-scoot"],
+          "keywords": ["boot scoot", "boot-scoot"],
+          "difficulty": "advanced",
+          "position": "top"
+        },
+        {
+          "id": "breakdown",
+          "name": "Breakdown",
+          "aliases": ["flat"],
+          "keywords": ["breakdown", "break down", "go flat"],
+          "difficulty": "beginner",
+          "position": "top"
+        },
+        {
+          "id": "cowboy",
+          "name": "Cowboy Ride",
+          "aliases": ["cowboy ride"],
+          "keywords": ["cowboy", "cowboy ride"],
+          "difficulty": "intermediate",
+          "position": "top"
+        }
+      ]
+    },
+    "defense": {
+      "name": "Defense",
+      "description": "Defensive moves to stop opponent's attacks",
+      "moves": [
+        {
+          "id": "sprawl",
+          "name": "Sprawl",
+          "aliases": ["sprawl defense"],
+          "keywords": ["sprawl", "sprawl defense", "sprawling"],
+          "difficulty": "beginner",
+          "position": "neutral"
+        },
+        {
+          "id": "whizzer",
+          "name": "Whizzer",
+          "aliases": ["whizzer defense"],
+          "keywords": ["whizzer", "whizzer defense", "wizard"],
+          "difficulty": "beginner",
+          "position": "neutral"
+        },
+        {
+          "id": "underhook",
+          "name": "Underhook",
+          "aliases": ["under hook"],
+          "keywords": ["underhook", "under hook", "under-hook"],
+          "difficulty": "beginner",
+          "position": "neutral"
+        },
+        {
+          "id": "down_block",
+          "name": "Down Block",
+          "aliases": ["down-block"],
+          "keywords": ["down block", "down-block"],
+          "difficulty": "beginner",
+          "position": "neutral"
+        },
+        {
+          "id": "post",
+          "name": "Post",
+          "aliases": ["post defense"],
+          "keywords": ["post", "posting"],
+          "difficulty": "beginner",
+          "position": "neutral"
+        },
+        {
+          "id": "head_defense",
+          "name": "Head Defense",
+          "aliases": ["head position"],
+          "keywords": ["head defense", "head position"],
+          "difficulty": "beginner",
+          "position": "neutral"
+        }
+      ]
+    },
+    "fundamentals": {
+      "name": "Fundamentals",
+      "description": "Basic position and movement drills",
+      "moves": [
+        {
+          "id": "stance",
+          "name": "Stance and Motion",
+          "aliases": ["stance"],
+          "keywords": ["stance", "stance and motion", "position"],
+          "difficulty": "beginner",
+          "position": "neutral"
+        },
+        {
+          "id": "level_change",
+          "name": "Level Change",
+          "aliases": ["level-change"],
+          "keywords": ["level change", "level-change"],
+          "difficulty": "beginner",
+          "position": "neutral"
+        },
+        {
+          "id": "penetration_step",
+          "name": "Penetration Step",
+          "aliases": ["penetration"],
+          "keywords": ["penetration step", "penetration"],
+          "difficulty": "beginner",
+          "position": "neutral"
+        },
+        {
+          "id": "hand_fighting",
+          "name": "Hand Fighting",
+          "aliases": ["hand-fighting"],
+          "keywords": ["hand fighting", "hand-fighting", "tie up", "wrist control"],
+          "difficulty": "beginner",
+          "position": "neutral"
+        },
+        {
+          "id": "chain_wrestling",
+          "name": "Chain Wrestling",
+          "aliases": ["chain-wrestling", "chains"],
+          "keywords": ["chain wrestling", "chain-wrestling", "chains", "scrambling"],
+          "difficulty": "intermediate",
+          "position": "neutral"
+        }
+      ]
+    }
+  }
+}

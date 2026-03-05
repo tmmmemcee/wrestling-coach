@@ -6,26 +6,38 @@
   <title>Wrestling Coach Assistant</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
-    body { background:#1a1a2e; color:#eee; font-family:'Segoe UI',sans-serif; }
-    .navbar { background:#16213e; border-bottom:3px solid #e94560; }
-    .navbar-brand { color:#e94560 !important; font-weight:bold; font-size:1.4rem; }
-    .hero { background:linear-gradient(135deg,#16213e 0%,#0f3460 100%); padding:2.5rem 0; text-align:center; }
-    .hero h1 { color:#e94560; font-size:2.2rem; font-weight:bold; }
-    .search-box { background:#16213e; border:2px solid #e94560; color:white; }
-    .search-box:focus { background:#16213e; color:white; box-shadow:0 0 0 0.2rem rgba(233,69,96,.25); border-color:#e94560; }
-    .search-box::placeholder { color:#aaa; }
-    .btn-wrestling { background:#e94560; border-color:#e94560; color:white; }
-    .btn-wrestling:hover { background:#c73652; border-color:#c73652; color:white; }
-    .filter-select { background:#16213e; color:white; border:1px solid #555; }
-    .filter-select:focus { background:#16213e; color:white; border-color:#e94560; }
-    .card { background:#0f3460; border:none; transition:transform .2s; }
-    .card:hover { transform:translateY(-4px); }
-    .card-title { color:#e94560; font-size:0.95rem; }
-    .video-thumb { width:100%; height:170px; object-fit:cover; }
-    .badge-red { background:#e94560; color:white; }
-    .tag-btn { font-size:.78rem; cursor:pointer; border:1px solid #555; background:transparent; color:#ccc; }
-    .tag-btn:hover { border-color:#e94560; color:#e94560; }
-    label { color:#aaa; font-size:.85rem; }
+    :root {
+      --primary: #e94560;
+      --dark: #1a1a2e;
+      --darker: #16213e;
+      --card: #0f3460;
+    }
+    body { background: var(--dark); color: #eee; font-family: 'Segoe UI', sans-serif; }
+    .navbar { background: var(--darker); border-bottom: 3px solid var(--primary); }
+    .navbar-brand { color: var(--primary) !important; font-weight: bold; font-size: 1.4rem; }
+    .hero { background: linear-gradient(135deg, var(--darker) 0%, var(--card) 100%); padding: 2.5rem 0; text-align: center; }
+    .hero h1 { color: var(--primary); font-size: 2.2rem; font-weight: bold; }
+    .search-box { background: var(--darker); border: 2px solid var(--primary); color: white; }
+    .search-box:focus { background: var(--darker); color: white; box-shadow: 0 0 0 0.2rem rgba(233,69,96,.25); border-color: var(--primary); }
+    .search-box::placeholder { color: #aaa; }
+    .btn-wrestling { background: var(--primary); border-color: var(--primary); color: white; }
+    .btn-wrestling:hover { background: #c73652; border-color: #c73652; color: white; }
+    .filter-select { background: var(--darker); color: white; border: 1px solid #555; }
+    .filter-select:focus { background: var(--darker); color: white; border-color: var(--primary); }
+    .card { background: var(--card); border: none; transition: transform .2s; }
+    .card:hover { transform: translateY(-4px); }
+    .card-title { color: var(--primary); font-size: 0.95rem; }
+    .video-thumb { width: 100%; height: 170px; object-fit: cover; }
+    .badge-red { background: var(--primary); color: white; }
+    .badge-votes { background: #28a745; }
+    .tag-btn { font-size: .78rem; cursor: pointer; border: 1px solid #555; background: transparent; color: #ccc; }
+    .tag-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .vote-btn { font-size: .75rem; padding: 0.2rem 0.5rem; }
+    .vote-up { background: #28a745; border-color: #28a745; }
+    .vote-down { background: #dc3545; border-color: #dc3545; }
+    .category-pill { cursor: pointer; }
+    .category-pill:hover { opacity: 0.8; }
+    label { color: #aaa; font-size: .85rem; }
   </style>
 </head>
 <body>
@@ -42,28 +54,27 @@
 <div class="hero">
   <div class="container">
     <h1>🤼 Wrestling Coach Assistant</h1>
-    <p class="lead mb-4" style="color:#aaa;">Folkstyle technique library for grades K-6 and up</p>
+    <p class="lead mb-4" style="color:#aaa;">Folkstyle technique library with coach ratings</p>
     <div class="row justify-content-center">
       <div class="col-md-8">
         <div class="input-group input-group-lg mb-3">
           <input type="text" class="form-control search-box" id="searchInput"
-            placeholder="Search: single leg, tilt, stand up, cradle...">
+            placeholder="Search: single leg, half nelson, cradle...">
           <button class="btn btn-wrestling" onclick="search()">🔍 Search</button>
         </div>
       </div>
     </div>
-
-    <!-- Quick tags -->
-    <div class="d-flex flex-wrap justify-content-center gap-2 mt-1">
-      <button class="btn tag-btn btn-sm" onclick="quick('single leg takedown')">Single Leg</button>
-      <button class="btn tag-btn btn-sm" onclick="quick('double leg takedown')">Double Leg</button>
-      <button class="btn tag-btn btn-sm" onclick="quick('ankle pick')">Ankle Pick</button>
-      <button class="btn tag-btn btn-sm" onclick="quick('tilt')">Tilts</button>
-      <button class="btn tag-btn btn-sm" onclick="quick('stand up escape')">Stand-ups</button>
-      <button class="btn tag-btn btn-sm" onclick="quick('sprawl defense')">Sprawl</button>
-      <button class="btn tag-btn btn-sm" onclick="quick('cradle')">Cradles</button>
-      <button class="btn tag-btn btn-sm" onclick="quick('half nelson')">Half Nelson</button>
-      <button class="btn tag-btn btn-sm" onclick="quick('stance motion')">Stance & Motion</button>
+    
+    <!-- Category Pills -->
+    <div class="d-flex flex-wrap justify-content-center gap-2 mb-3" id="categoryPills">
+      <button class="btn badge-red category-pill" onclick="searchCategory('')">All</button>
+      <button class="btn btn-outline-light category-pill" onclick="searchCategory('takedowns')">Takedowns</button>
+      <button class="btn btn-outline-light category-pill" onclick="searchCategory('pins')">Pins</button>
+      <button class="btn btn-outline-light category-pill" onclick="searchCategory('tilts')">Tilts</button>
+      <button class="btn btn-outline-light category-pill" onclick="searchCategory('escapes')">Escapes</button>
+      <button class="btn btn-outline-light category-pill" onclick="searchCategory('reversals')">Reversals</button>
+      <button class="btn btn-outline-light category-pill" onclick="searchCategory('defense')">Defense</button>
+      <button class="btn btn-outline-light category-pill" onclick="searchCategory('top_riding')">Riding</button>
     </div>
   </div>
 </div>
@@ -72,44 +83,40 @@
   <!-- Filters -->
   <div class="row mb-4 g-2">
     <div class="col-6 col-md-3">
-      <label>Move Type</label>
-      <select class="form-select filter-select" id="fMove" onchange="search()">
-        <option value="">All moves</option>
-        <option>single leg</option><option>double leg</option><option>ankle pick</option>
-        <option>fireman's carry</option><option>duck under</option><option>high crotch</option>
-        <option>snap down</option><option>tilt</option><option>half nelson</option>
-        <option>cradle</option><option>leg ride</option><option>stand up</option>
-        <option>switch</option><option>sit out</option><option>sprawl</option>
-        <option>whizzer</option><option>chain wrestling</option><option>stance</option>
-      </select>
-    </div>
-    <div class="col-6 col-md-3">
       <label>Position</label>
       <select class="form-select filter-select" id="fPos" onchange="search()">
         <option value="">All positions</option>
-        <option>neutral</option><option>top</option><option>bottom</option>
+        <option>neutral</option>
+        <option>top</option>
+        <option>bottom</option>
       </select>
     </div>
     <div class="col-6 col-md-3">
       <label>Difficulty</label>
       <select class="form-select filter-select" id="fDiff" onchange="search()">
         <option value="">All levels</option>
-        <option>beginner</option><option>intermediate</option><option>advanced</option>
+        <option>beginner</option>
+        <option>intermediate</option>
+        <option>advanced</option>
       </select>
     </div>
     <div class="col-6 col-md-3">
-      <label>Age Group</label>
-      <select class="form-select filter-select" id="fAge" onchange="search()">
-        <option value="">All ages</option>
-        <option>elementary (6-10)</option><option>middle school (11-14)</option>
+      <label>Sort By</label>
+      <select class="form-select filter-select" id="fSort" onchange="search()">
+        <option value="rating">Rating (Top Rated)</option>
+        <option value="newest">Newest First</option>
+        <option value="alpha">Alphabetical</option>
       </select>
+    </div>
+    <div class="col-6 col-md-3 d-flex align-items-end">
+      <button class="btn btn-outline-light w-100" onclick="showTopRated()">⭐ Top Rated</button>
     </div>
   </div>
 
   <!-- Results -->
   <div id="results">
     <div class="text-center py-5 text-muted">
-      <p>🔍 Search for a move or select a filter above to get started</p>
+      <p>Select a category above or search for a specific move</p>
     </div>
   </div>
 </div>
@@ -130,7 +137,10 @@
         </div>
       </div>
       <div class="modal-footer" style="border-color:#333;">
-        <small class="text-muted" id="modalMeta"></small>
+        <div class="me-auto">
+          <span id="modalRating" class="badge badge-votes"></span>
+          <span id="modalVotes" class="text-muted small ms-2"></span>
+        </div>
         <a id="modalLink" href="#" target="_blank" class="btn btn-sm btn-wrestling">Open on YouTube</a>
       </div>
     </div>
@@ -140,73 +150,83 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 const modal = new bootstrap.Modal(document.getElementById('videoModal'));
+let currentVideoId = null;
 
 document.getElementById('searchInput').addEventListener('keypress', e => {
   if (e.key === 'Enter') search();
 });
 
-function quick(term) {
-  document.getElementById('searchInput').value = term;
-  search();
+function searchCategory(cat) {
+  document.getElementById('searchInput').value = '';
+  search(cat);
 }
 
-function search() {
-  const q      = document.getElementById('searchInput').value;
-  const move   = document.getElementById('fMove').value;
-  const pos    = document.getElementById('fPos').value;
-  const diff   = document.getElementById('fDiff').value;
-  const age    = document.getElementById('fAge').value;
-
+function search(category = '') {
+  const q = document.getElementById('searchInput').value;
+  const pos = document.getElementById('fPos').value;
+  const diff = document.getElementById('fDiff').value;
+  
   const params = new URLSearchParams();
-  if (q)    params.set('q', q);
-  if (move) params.set('move_type', move);
-  if (pos)  params.set('position', pos);
+  if (q) params.set('q', q);
+  if (pos) params.set('position', pos);
   if (diff) params.set('difficulty', diff);
-  if (age)  params.set('age_group', age);
-
+  if (category) params.set('category', category);
+  
   document.getElementById('results').innerHTML = `
     <div class="text-center py-5">
       <div class="spinner-border" style="color:#e94560;"></div>
-      <p class="mt-2 text-muted">Searching...</p>
+      <p class="mt-2 text-muted">Loading...</p>
     </div>`;
-
+  
   fetch('/api/search?' + params)
     .then(r => r.json())
     .then(render)
     .catch(() => {
       document.getElementById('results').innerHTML =
-        `<div class="alert alert-danger">Failed to load. Is the server running?</div>`;
+        `<div class="alert alert-danger">Failed to load. Server running?</div>`;
     });
+}
+
+function showTopRated() {
+  fetch('/api/stats')
+    .then(r => r.json())
+    .then(data => render(data.topRated))
+    .catch(() => search());
 }
 
 function render(videos) {
   const div = document.getElementById('results');
   if (!videos.length) {
-    div.innerHTML = `<div class="text-center py-5 text-muted">No videos found. Try different search terms or <a href="#" style="color:#e94560;" onclick="runCrawler()">index more videos</a>.</div>`;
+    div.innerHTML = `<div class="text-center py-5 text-muted">No videos found.</div>`;
     return;
   }
-
+  
   div.innerHTML = `
-    <p class="text-muted mb-3">${videos.length} video${videos.length !== 1 ? 's' : ''} found</p>
+    <p class="text-muted mb-3">${videos.length} video${videos.length !== 1 ? 's' : ''}</p>
     <div class="row g-3">
       ${videos.map(v => `
         <div class="col-12 col-sm-6 col-lg-4">
           <div class="card h-100">
-            <img src="${v.thumbnail_url}" class="video-thumb" alt="${v.title}" style="cursor:pointer;"
-              onclick="playVideo('${v.youtube_id}', '${v.title.replace(/'/g,"\\'")}', '${v.channel || ''}', '${v.duration_formatted || ''}')">
+            <img src="${v.thumbnail_url}" class="video-thumb" style="cursor:pointer;"
+              onclick="playVideo(${v.id}, '${v.youtube_id}', '${v.title.replace(/'/g,"\\'")}', '${v.channel || ''}', ${v.rating || 0}, ${v.upvotes || 0}, ${v.downvotes || 0})">
             <div class="card-body d-flex flex-column">
               <h6 class="card-title">${v.title}</h6>
               <p class="text-muted small mb-2">${v.duration_formatted || ''} · ${v.channel || ''}</p>
               <div class="mb-2">
-                ${v.move_type  ? `<span class="badge badge-red me-1">${v.move_type}</span>` : ''}
-                ${v.position   ? `<span class="badge bg-secondary me-1">${v.position}</span>` : ''}
+                ${v.move_type ? `<span class="badge badge-red me-1">${v.move_type}</span>` : ''}
+                ${v.position ? `<span class="badge bg-secondary me-1">${v.position}</span>` : ''}
                 ${v.difficulty ? `<span class="badge bg-info text-dark me-1">${v.difficulty}</span>` : ''}
-                ${v.age_group  ? `<span class="badge bg-warning text-dark">${v.age_group}</span>` : ''}
+                ${v.rating > 0 ? `<span class="badge badge-votes">⭐ ${v.rating}</span>` : ''}
               </div>
-              <button class="btn btn-sm btn-wrestling mt-auto"
-                onclick="playVideo('${v.youtube_id}', '${v.title.replace(/'/g,"\\'")}', '${v.channel || ''}', '${v.duration_formatted || ''}')">
-                ▶ Watch
-              </button>
+              <div class="mt-auto d-flex justify-content-between align-items-center">
+                <button class="btn btn-sm btn-wrestling" onclick="playVideo(${v.id}, '${v.youtube_id}', '${v.title.replace(/'/g,"\\'")}', '${v.channel || ''}', ${v.rating || 0}, ${v.upvotes || 0}, ${v.downvotes || 0})">
+                  ▶ Watch
+                </button>
+                <div>
+                  <button class="btn btn-sm vote-btn vote-up me-1" onclick="vote(${v.id}, 'up')">👍 ${v.upvotes || 0}</button>
+                  <button class="btn btn-sm vote-btn vote-down" onclick="vote(${v.id}, 'down')">👎 ${v.downvotes || 0}</button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -214,18 +234,33 @@ function render(videos) {
     </div>`;
 }
 
-function playVideo(id, title, channel, duration) {
+function playVideo(id, youtubeId, title, channel, rating, up, down) {
+  currentVideoId = id;
   document.getElementById('modalTitle').textContent = title;
-  document.getElementById('modalFrame').src = `https://www.youtube.com/embed/${id}?autoplay=1`;
-  document.getElementById('modalMeta').textContent = `${channel} · ${duration}`;
-  document.getElementById('modalLink').href = `https://www.youtube.com/watch?v=${id}`;
+  document.getElementById('modalFrame').src = `https://www.youtube.com/embed/${youtubeId}?autoplay=1`;
+  document.getElementById('modalLink').href = `https://www.youtube.com/watch?v=${youtubeId}`;
+  document.getElementById('modalRating').textContent = rating > 0 ? `⭐ ${rating}` : 'No ratings';
+  document.getElementById('modalVotes').textContent = `👍 ${up} 👎 ${down}`;
   modal.show();
 }
 
-// Stop video when modal closes
+function vote(videoId, type) {
+  fetch(`/api/vote/${videoId}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ vote: type })
+  })
+    .then(r => r.json())
+    .then(() => search())
+    .catch(console.error);
+}
+
 document.getElementById('videoModal').addEventListener('hide.bs.modal', () => {
   document.getElementById('modalFrame').src = '';
 });
+
+// Load on page load
+search();
 </script>
 </body>
 </html>
