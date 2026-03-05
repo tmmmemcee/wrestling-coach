@@ -7,44 +7,51 @@ const PORT = process.env.PORT || 3737;
 
 const db = new Database(path.join(__dirname, 'wrestling.db'));
 
-// Main schema with all features
-db.exec(`CREATE TABLE IF NOT EXISTS videos (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  youtube_id TEXT UNIQUE NOT NULL,
-  title TEXT NOT NULL,
-  description TEXT,
-  channel TEXT,
-  coach_name TEXT,
-  duration INTEGER,
-  thumbnail_url TEXT,
-  move_type TEXT,
-  move_id TEXT,
-  position TEXT,
-  difficulty TEXT,
-  age_group TEXT DEFAULT 'elementary (6-10)',
-  style TEXT DEFAULT 'folkstyle',
-  category TEXT,
-  content_type TEXT DEFAULT 'technique',
-  tags TEXT,
-  upvotes INTEGER DEFAULT 0,
-  downvotes INTEGER DEFAULT 0,
-  rating INTEGER DEFAULT 0,
-  source_type TEXT DEFAULT 'youtube',
-  indexed_at DATETIME DEFAULT CURRENT_TIMESTAMP
-)`);
+// Update schema with new capabilities
+db.exec(`
+  CREATE TABLE IF NOT EXISTS videos (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    youtube_id TEXT UNIQUE NOT NULL,
+    title TEXT NOT NULL,
+    description TEXT,
+    channel TEXT,
+    coach_name TEXT,
+    duration INTEGER,
+    thumbnail_url TEXT,
+    move_type TEXT,
+    move_id TEXT,
+    position TEXT,
+    difficulty TEXT,
+    age_group TEXT DEFAULT 'elementary (6-10)',
+    style TEXT DEFAULT 'folkstyle',
+    category TEXT,
+    content_type TEXT DEFAULT 'technique',
+    tags TEXT,
+    upvotes INTEGER DEFAULT 0,
+    downvotes INTEGER DEFAULT 0,
+    rating INTEGER DEFAULT 0,
+    source_type TEXT DEFAULT 'youtube',
+    indexed_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  )
+`);
 
-// Migration helper
-function addColumn(db, table, col, sqlType) {
-  try {
-    db.exec(`ALTER TABLE ${table} ADD COLUMN ${col} ${sqlType}`);
+// Auto-migration for new fields
+const migrations = [
+  `ALTER TABLE videos ADD COLUMN coach_name TEXT`,
+  `ALTER TABLE videos ADD COLUMN content_type TEXT DEFAULT 'technique'`,
+  `ALTER TABLE videos ADD COLUMN move_id TEXT`,
+  `ALTER TABLE videos ADD COLUMN category TEXT`,
+  `ALTER TABLE videos ADD COLUMN upvotes INTEGER DEFAULT 0`,
+  `ALTER TABLE videos ADD COLUMN downvotes INTEGER DEFAULT 0`,
+  `ALTER TABLE videos ADD COLUMN rating INTEGER DEFAULT 0`
+];
+for (const sql of migrations) {
+  try { 
+    db.exec(sql); 
   } catch (e) {
-    // Column already exists
+    /* ignore if column already exists */
   }
 }
-
-// Add new columns if missing
-addColumn(db, 'videos', 'coach_name', 'TEXT');
-addColumn(db, 'videos', 'content_type', "TEXT DEFAULT 'technique'");
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -118,7 +125,6 @@ app.post('/api/vote/:id', (req, res) => {
 app.get('/api/stats', (req, res) => {
   const total = db.prepare('SELECT COUNT(*) as count FROM videos').get().count;
   const byCat = db.prepare('SELECT category, COUNT(*) as count FROM videos WHERE category IS NOT NULL GROUP BY category').all();
-  const byContentType = db.prepare('SELECT content_type, COUNT(*) as count FROM videos WHERE content_type IS NOT NULL GROUP BY content_type').all();
   const topRated = db.prepare('SELECT * FROM videos ORDER BY rating DESC LIMIT 5').all();
   
   const topCoaches = db.prepare(`
@@ -133,7 +139,6 @@ app.get('/api/stats', (req, res) => {
   res.json({ 
     total, 
     byCat, 
-    byContentType,
     topRated: topRated.map(formatVideo),
     topCoaches: topCoaches.map(c => ({
       name: c.coach_name,
