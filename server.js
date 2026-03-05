@@ -33,6 +33,18 @@ db.exec(`
   )
 `);
 
+// Auto-migration: Add missing columns if they don't exist
+const migrations = [
+  `ALTER TABLE videos ADD COLUMN move_id TEXT`,
+  `ALTER TABLE videos ADD COLUMN category TEXT`,
+  `ALTER TABLE videos ADD COLUMN upvotes INTEGER DEFAULT 0`,
+  `ALTER TABLE videos ADD COLUMN downvotes INTEGER DEFAULT 0`,
+  `ALTER TABLE videos ADD COLUMN rating INTEGER DEFAULT 0`
+];
+for (const sql of migrations) {
+  try { db.exec(sql); } catch (e) { /* column already exists, ignore */ }
+}
+
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
