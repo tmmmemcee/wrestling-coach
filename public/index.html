@@ -42,6 +42,8 @@
     .category-pill:hover { opacity: 0.8; }
     label { color: #aaa; font-size: .85rem; }
     .thumbnail-fallback { background: linear-gradient(45deg, #16213e, #1a1a2e); display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 3rem; }
+    .btn-plan { background: #17a2b8; border-color: #17a2b8; color: white; font-size: .75rem; padding: 0.2rem 0.5rem; }
+    .btn-plan:hover { background: #138496; border-color: #138496; color: white; }
   </style>
 </head>
 <body>
@@ -50,7 +52,7 @@
   <div class="container">
     <a class="navbar-brand" href="/">🤼 Wrestling Coach</a>
     <div class="navbar-nav ms-auto">
-      <a class="nav-link" href="/">Home</a>
+      <a class="nav-link active" href="/">Home</a>
       <a class="nav-link" href="/matches.html">Matches</a>
       <a class="nav-link" href="/lesson-plans.html">Lesson Plans</a>
       <a class="nav-link" href="/coaches.html">Coaches</a>
@@ -156,12 +158,87 @@
         </div>
       </div>
       <div class="modal-footer" style="border-color:#333;">
-        <div class="me-left">
+        <div class="me-auto">
           <span id="modalRating" class="badge badge-votes"></span>
           <span id="modalVotes" class="text-muted small ms-2"></span>
           <span id="modalCoach" class="text-muted small ms-2"></span>
         </div>
+        <button class="btn btn-sm btn-plan" onclick="openAddToPlanModal()">
+          📋 Add to Plan
+        </button>
         <a id="modalLink" href="#" target="_blank" class="btn btn-sm btn-wrestling">Watch on YouTube</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add to Plan Modal -->
+<div class="modal fade" id="addToPlanModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="background:#0f3460;">
+      <div class="modal-header" style="border-color:#e94560;">
+        <h5 class="modal-title text-white">📋 Add to Lesson Plan</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="addToPlanContent">
+          <p class="text-muted mb-3">Adding: <strong id="addVideoTitle" style="color:var(--primary);"></strong></p>
+          
+          <div class="mb-3">
+            <label class="form-label">Select Plan</label>
+            <select class="form-select filter-select" id="planSelect">
+              <option value="">-- Select a plan --</option>
+            </select>
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label">Notes for this video (optional)</label>
+            <textarea class="form-control" id="videoNotes" rows="2" placeholder="e.g., Focus on hip positioning, drill 3x each side"></textarea>
+          </div>
+          
+          <div class="d-flex gap-2 mb-3">
+            <button class="btn btn-outline-light btn-sm" onclick="showNewPlanForm()">+ Create New Plan</button>
+          </div>
+          
+          <div id="newPlanForm" class="d-none">
+            <hr>
+            <div class="mb-2">
+              <label class="form-label">Plan Title *</label>
+              <input type="text" class="form-control" id="newPlanTitle" placeholder="e.g., Week 1: Takedown Fundamentals">
+            </div>
+            <div class="row">
+              <div class="col-6 mb-2">
+                <label class="form-label">Difficulty</label>
+                <select class="form-select filter-select" id="newPlanDifficulty">
+                  <option>beginner</option>
+                  <option>intermediate</option>
+                  <option>advanced</option>
+                </select>
+              </div>
+              <div class="col-6 mb-2">
+                <label class="form-label">Category</label>
+                <select class="form-select filter-select" id="newPlanCategory">
+                  <option value="">All</option>
+                  <option>takedowns</option>
+                  <option>pins</option>
+                  <option>tilts</option>
+                  <option>escapes</option>
+                  <option>reversals</option>
+                  <option>defense</option>
+                  <option>top_riding</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-check mt-2">
+              <input class="form-check-input" type="checkbox" id="newPlanTemplate">
+              <label class="form-check-label small" for="newPlanTemplate">Save as template (reusable)</label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="border-color:#333;">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-wrestling" onclick="addToPlan()">Add to Plan</button>
       </div>
     </div>
   </div>
@@ -170,7 +247,10 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 const modal = new bootstrap.Modal(document.getElementById('videoModal'));
+const addToPlanModal = new bootstrap.Modal(document.getElementById('addToPlanModal'));
 let currentVideoId = null;
+let currentVideoTitle = '';
+let currentVideoData = null;
 
 document.getElementById('searchInput').addEventListener('keypress', e => {
   if (e.key === 'Enter') search();
@@ -247,12 +327,15 @@ function render(videos) {
                 ${v.content_type === 'match' ? `<span class="badge bg-danger me-1">🎬 Match</span>` : ''}
                 ${v.content_type === 'drill' ? `<span class="badge bg-warning text-dark me-1">🏋️ Drill</span>` : ''}
               </div>
-              <div class="mt-auto d-flex justify-content-between align-items-center">
+              <div class="mt-auto d-flex justify-content-between align-items-center flex-wrap gap-1">
                 <button class="btn btn-sm btn-wrestling" onclick="playVideo(${v.id}, '${v.youtube_id}', '${v.title.replace(/'/g,"\\'")}', '${v.channel || ''}', ${v.rating || 0}, ${v.upvotes || 0}, ${v.downvotes || 0}, '${coachDisplay}')">
                   ▶ Watch
                 </button>
+                <button class="btn btn-sm btn-plan" onclick="openAddToPlanModalDirect(${v.id}, '${v.title.replace(/'/g,"\\'")}')">
+                  📋 Add to Plan
+                </button>
                 <div>
-                  <button class="btn btn-sm vote-btn vote-up me-1" onclick="vote(${v.id}, 'up')">👍 ${v.upvotes || 0}</button>
+                  <button class="btn btn-sm vote-btn vote-up" onclick="vote(${v.id}, 'up')">👍 ${v.upvotes || 0}</button>
                   <button class="btn btn-sm vote-btn vote-down" onclick="vote(${v.id}, 'down')">👎 ${v.downvotes || 0}</button>
                 </div>
               </div>
@@ -266,6 +349,8 @@ function render(videos) {
 
 function playVideo(id, youtubeId, title, channel, rating, up, down, coach) {
   currentVideoId = id;
+  currentVideoTitle = title;
+  currentVideoData = { id, youtubeId, title, channel, rating, up, down, coach };
   document.getElementById('modalTitle').textContent = title;
   document.getElementById('modalFrame').src = `https://www.youtube.com/embed/${youtubeId}?autoplay=1`;
   document.getElementById('modalLink').href = `https://www.youtube.com/watch?v=${youtubeId}`;
@@ -284,6 +369,111 @@ function vote(videoId, type) {
     .then(r => r.json())
     .then(() => search())
     .catch(console.error);
+}
+
+function openAddToPlanModal() {
+  openAddToPlanModalDirect(currentVideoId, currentVideoTitle);
+}
+
+function openAddToPlanModalDirect(videoId, videoTitle) {
+  currentVideoId = videoId;
+  currentVideoTitle = videoTitle;
+  document.getElementById('addVideoTitle').textContent = videoTitle;
+  document.getElementById('videoNotes').value = '';
+  document.getElementById('newPlanForm').classList.add('d-none');
+  document.getElementById('planSelect').value = '';
+  
+  // Load existing plans
+  fetch('/api/lesson-plans')
+    .then(r => r.json())
+    .then(plans => {
+      const select = document.getElementById('planSelect');
+      select.innerHTML = '<option value="">-- Select a plan --</option>';
+      
+      plans.filter(p => !p.is_template).forEach(plan => {
+        const videoCount = plan.videos ? plan.videos.length : 0;
+        const option = document.createElement('option');
+        option.value = plan.id;
+        option.textContent = `${plan.name} (${videoCount} videos)`;
+        select.appendChild(option);
+      });
+      
+      select.innerHTML += '<option value="new">+ Create new plan...</option>';
+    })
+    .catch(console.error);
+  
+  modal.hide();
+  addToPlanModal.show();
+}
+
+function showNewPlanForm() {
+  document.getElementById('newPlanForm').classList.toggle('d-none');
+  document.getElementById('planSelect').value = '';
+}
+
+document.getElementById('planSelect').addEventListener('change', (e) => {
+  if (e.target.value === 'new') {
+    showNewPlanForm();
+  }
+});
+
+async function addToPlan() {
+  const planId = document.getElementById('planSelect').value;
+  const notes = document.getElementById('videoNotes').value;
+  const newPlanTitle = document.getElementById('newPlanTitle').value.trim();
+  
+  let targetPlanId = null;
+  
+  // If creating new plan
+  if (newPlanTitle) {
+    try {
+      const res = await fetch('/api/lesson-plans', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newPlanTitle,
+          difficulty: document.getElementById('newPlanDifficulty').value,
+          category: document.getElementById('newPlanCategory').value,
+          is_template: document.getElementById('newPlanTemplate').checked,
+          videos: [{ id: currentVideoId, notes: notes }]
+        })
+      });
+      
+      if (res.ok) {
+        addToPlanModal.hide();
+        alert(`✅ Created "${newPlanTitle}" and added video!`);
+        return;
+      } else {
+        throw new Error('Failed to create plan');
+      }
+    } catch (e) {
+      alert('Error creating plan: ' + e.message);
+      return;
+    }
+  }
+  
+  // If adding to existing plan
+  if (!planId) {
+    alert('Please select a plan or create a new one');
+    return;
+  }
+  
+  try {
+    const res = await fetch(`/api/plan-videos/${planId}/add`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ videoId: currentVideoId, notes: notes })
+    });
+    
+    if (res.ok) {
+      addToPlanModal.hide();
+      alert(`✅ Added to lesson plan!`);
+    } else {
+      throw new Error('Failed to add video');
+    }
+  } catch (e) {
+    alert('Error adding video: ' + e.message);
+  }
 }
 
 document.getElementById('videoModal').addEventListener('hide.bs.modal', () => {
