@@ -7,6 +7,7 @@ const PORT = process.env.PORT || 3737;
 
 const db = new Database(path.join(__dirname, 'wrestling.db'));
 
+// Main schema with all features
 db.exec(`CREATE TABLE IF NOT EXISTS videos (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   youtube_id TEXT UNIQUE NOT NULL,
@@ -32,13 +33,20 @@ db.exec(`CREATE TABLE IF NOT EXISTS videos (
   indexed_at DATETIME DEFAULT CURRENT_TIMESTAMP
 )`);
 
+// Migration helper
 function addColumn(db, table, col, sqlType) {
-  try { db.exec(`ALTER TABLE ${table} ADD COLUMN ${col} ${sqlType}`); } catch (e) {}
+  try {
+    db.exec(`ALTER TABLE ${table} ADD COLUMN ${col} ${sqlType}`);
+  } catch (e) {
+    // Column already exists
+  }
 }
 
+// Add new columns if missing
 addColumn(db, 'videos', 'coach_name', 'TEXT');
 addColumn(db, 'videos', 'content_type', "TEXT DEFAULT 'technique'");
 
+// Lesson Plans Schema
 db.exec(`CREATE TABLE IF NOT EXISTS lesson_plans (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,
@@ -61,11 +69,23 @@ db.exec(`CREATE TABLE IF NOT EXISTS plan_videos (
   FOREIGN KEY (video_id) REFERENCES videos(id) ON DELETE CASCADE
 )`);
 
+// Add missing lesson plan columns
+addColumn(db, 'lesson_plans', 'is_template', 'INTEGER DEFAULT 0');
+
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/api/search', (req, res) => {
-  const { q = '', move_type = '', position = '', difficulty = '', category = '', content_type = '', coach = '' } = req.query;
+  const { 
+    q = '', 
+    move_type = '', 
+    position = '', 
+    difficulty = '', 
+    category = '',
+    content_type = '',
+    coach = '' 
+  } = req.query;
+  
   let conditions = ['1=1'];
   let params = [];
 
@@ -104,12 +124,20 @@ app.get('/api/coaches', (req, res) => {
     GROUP BY coach_name 
     ORDER BY count DESC
   `).all();
-  res.json(coaches.map(c => ({ name: c.coach_name, count: c.count })));
+  res.json(coaches.map(c => ({
+    name: c.coach_name,
+    count: c.count
+  })));
 });
 
+// Lesson Plan API
 app.get('/api/lesson-plans', (req, res) => {
   const isTemplate = req.query.is_template === 'true';
-  const plans = db.prepare(`SELECT * FROM lesson_plans WHERE is_template = ? ORDER BY created_at DESC`).all(isTemplate ? 1 : 0);
+  const plans = db.prepare(`
+    SELECT * FROM lesson_plans 
+    WHERE is_template = ?
+    ORDER BY created_at DESC
+  `).all(isTemplate ? 1 : 0);
   
   res.json(plans.map(plan => {
     const videos = db.prepare(`
@@ -119,6 +147,7 @@ app.get('/api/lesson-plans', (req, res) => {
       WHERE p.lesson_plan_id = ?
       ORDER BY p.order_num
     `).all(plan.id);
+    
     return { ...plan, videos };
   }));
 });
@@ -148,6 +177,7 @@ app.post('/api/lesson-plans', (req, res) => {
   
   const planId = dbPlan.lastInsertRowid;
   
+  // Add videos in order
   for (const [index, video] of videos.entries()) {
     db.prepare(`
       INSERT INTO plan_videos (lesson_plan_id, video_id, order_num, notes)
@@ -177,6 +207,8 @@ app.delete('/api/lesson-plans/:id', (req, res) => {
 
 app.post('/api/plan-videos/:planId/add', (req, res) => {
   const { videoId, notes } = req.body;
+  
+  // Get max order_num
   const maxOrder = db.prepare('SELECT MAX(order_num) as max FROM plan_videos WHERE lesson_plan_id = ?').get(req.params.planId);
   const newOrder = (maxOrder.max || -1) + 1;
   
@@ -190,8 +222,11 @@ app.post('/api/plan-videos/:planId/add', (req, res) => {
 
 app.post('/api/plan-videos/:planId/reorder', (req, res) => {
   const { videoId, newOrder } = req.body;
+  
+  // Get all videos in plan
   const videos = db.prepare('SELECT * FROM plan_videos WHERE lesson_plan_id = ? ORDER BY order_num').all(req.params.planId);
   
+  // Update order_num for all videos
   for (const video of videos) {
     if (video.id === videoId) {
       db.prepare('UPDATE plan_videos SET order_num = ? WHERE id = ?').run(newOrder, video.id);
@@ -235,7 +270,10 @@ app.get('/api/stats', (req, res) => {
     byCat, 
     byContentType,
     topRated: topRated.map(formatVideo),
-    topCoaches: topCoaches.map(c => ({ name: c.coach_name, count: c.count })),
+    topCoaches: topCoaches.map(c => ({
+      name: c.coach_name,
+      count: c.count
+    })),
     lessonPlanCount
   });
 });
@@ -243,7 +281,11 @@ app.get('/api/stats', (req, res) => {
 function formatVideo(v) {
   const mins = v.duration ? Math.floor(v.duration / 60) : null;
   const secs = v.duration ? String(v.duration % 60).padStart(2, '0') : null;
-  return { ...v, duration_formatted: mins !== null ? `${mins}:${secs}` : null, embed_url: `https://www.youtube.com/embed/${v.youtube_id}` };
+  return {
+    ...v,
+    duration_formatted: mins !== null ? `${mins}:${secs}` : null,
+    embed_url: `https://www.youtube.com/embed/${v.youtube_id}`
+  };
 }
 
 app.listen(PORT, () => {
