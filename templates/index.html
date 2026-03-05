@@ -1,0 +1,183 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="hero">
+    <div class="container">
+        <h1>🤼 Wrestling Coach Assistant</h1>
+        <p class="lead mb-4">Search thousands of wrestling technique videos by move, position, difficulty, and age group</p>
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="input-group input-group-lg mb-4">
+                    <input type="text" class="form-control search-box" id="searchInput" placeholder="Search for moves, coaches, or techniques...">
+                    <button class="btn btn-wrestling" type="button" onclick="searchVideos()">
+                        🔍 Search
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container py-4">
+    <!-- Filters -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <label class="form-label">Move Type</label>
+            <select class="form-select filter-select" id="moveTypeFilter" onchange="searchVideos()">
+                <option value="">All moves</option>
+                <option value="single leg">Single Leg</option>
+                <option value="double leg">Double Leg</option>
+                <option value="ankle pick">Ankle Pick</option>
+                <option value="fireman's">Fireman's Carry</option>
+                <option value="duck under">Duck Under</option>
+                <option value="snap down">Snap Down</option>
+                <option value="tilt">Tilt</option>
+                <option value="turn">Turn</option>
+                <option value="stand up">Stand Up</option>
+                <option value="escape">Escape</option>
+                <option value="reversal">Reversal</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Position</label>
+            <select class="form-select filter-select" id="positionFilter" onchange="searchVideos()">
+                <option value="">All positions</option>
+                <option value="neutral">Neutral</option>
+                <option value="top">Top (Offense)</option>
+                <option value="bottom">Bottom (Defense)</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Difficulty</label>
+            <select class="form-select filter-select" id="difficultyFilter" onchange="searchVideos()">
+                <option value="">All levels</option>
+                <option value="beginner">Beginner</option>
+                <option value="intermediate">Intermediate</option>
+                <option value="advanced">Advanced</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Age Group</label>
+            <select class="form-select filter-select" id="ageFilter" onchange="searchVideos()">
+                <option value="">All ages</option>
+                <option value="elementary (6-10)">Elementary (6-10)</option>
+                <option value="middle school (11-14)">Middle School (11-14)</option>
+            </select>
+        </div>
+    </div>
+    
+    <!-- Quick Tags -->
+    <div class="mb-4">
+        <p class="text-muted">Quick searches:</p>
+        <button class="btn btn-outline-light btn-sm me-2 mb-2" onclick="quickSearch('single leg takedown')">Single Leg</button>
+        <button class="btn btn-outline-light btn-sm me-2 mb-2" onclick="quickSearch('double leg takedown')">Double Leg</button>
+        <button class="btn btn-outline-light btn-sm me-2 mb-2" onclick="quickSearch('ankle pick')">Ankle Pick</button>
+        <button class="btn btn-outline-light btn-sm me-2 mb-2" onclick="quickSearch('tilt')">Tilts</button>
+        <button class="btn btn-outline-light btn-sm me-2 mb-2" onclick="quickSearch('stand up escape')">Stand-ups</button>
+        <button class="btn btn-outline-light btn-sm me-2 mb-2" onclick="quickSearch('shot defense')">Shot Defense</button>
+        <button class="btn btn-outline-light btn-sm me-2 mb-2" onclick="quickSearch('chain wrestling')">Chain Wrestling</button>
+    </div>
+    
+    <!-- Results -->
+    <div id="results">
+        <div class="text-center py-5">
+            <p class="text-muted">Enter a search term or select filters to find wrestling videos</p>
+        </div>
+    </div>
+</div>
+
+<script>
+function searchVideos() {
+    const query = document.getElementById('searchInput').value;
+    const moveType = document.getElementById('moveTypeFilter').value;
+    const position = document.getElementById('positionFilter').value;
+    const difficulty = document.getElementById('difficultyFilter').value;
+    const ageGroup = document.getElementById('ageFilter').value;
+    
+    // Build URL
+    const params = new URLSearchParams();
+    if (query) params.append('q', query);
+    if (moveType) params.append('move_type', moveType);
+    if (position) params.append('position', position);
+    if (difficulty) params.append('difficulty', difficulty);
+    if (ageGroup) params.append('age_group', ageGroup);
+    
+    // Show loading
+    document.getElementById('results').innerHTML = `
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Searching...</p>
+        </div>
+    `;
+    
+    // Fetch results
+    fetch('/search?' + params.toString())
+        .then(response => response.json())
+        .then(data => displayResults(data))
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('results').innerHTML = `
+                <div class="alert alert-danger">Error loading videos. Please try again.</div>
+            `;
+        });
+}
+
+function displayResults(videos) {
+    const resultsDiv = document.getElementById('results');
+    
+    if (videos.length === 0) {
+        resultsDiv.innerHTML = `
+            <div class="text-center py-5">
+                <p class="text-muted">No videos found. Try different search terms.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    let html = `<div class="row">`;
+    
+    videos.forEach(video => {
+        let badges = '';
+        if (video.move_type) badges += `<span class="badge badge-wrestling tag">${video.move_type}</span>`;
+        if (video.position) badges += `<span class="badge bg-secondary tag">${video.position}</span>`;
+        if (video.difficulty) badges += `<span class="badge bg-info tag">${video.difficulty}</span>`;
+        if (video.age_group) badges += `<span class="badge bg-warning text-dark tag">${video.age_group}</span>`;
+        
+        html += `
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <a href="/video/${video.id}">
+                        <img src="${video.thumbnail_url}" class="card-img-top video-thumbnail" alt="${video.title}">
+                    </a>
+                    <div class="card-body">
+                        <h5 class="card-title text-truncate">${video.title}</h5>
+                        <p class="card-text text-muted small">
+                            ${video.duration_formatted || ''} • ${video.channel || 'Unknown channel'}
+                        </p>
+                        <div class="mb-2">${badges}</div>
+                        <a href="/video/${video.id}" class="btn btn-sm btn-wrestling">Watch Technique</a>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    resultsDiv.innerHTML = html;
+}
+
+function quickSearch(term) {
+    document.getElementById('searchInput').value = term;
+    searchVideos();
+}
+
+// Search on Enter key
+document.getElementById('searchInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        searchVideos();
+    }
+});
+</script>
+{% endblock %}
