@@ -240,6 +240,30 @@ app.get('/api/stats', (req, res) => {
   });
 });
 
+// Manual video addition API
+app.post('/api/videos/add', async (req, res) => {
+  const { youtube_url, age_group, style } = req.body;
+  
+  if (!youtube_url) {
+    return res.status(400).json({ success: false, error: 'YouTube URL required' });
+  }
+  
+  try {
+    const { addVideo } = require('./add-video');
+    const result = await addVideo(youtube_url, { age_group, style });
+    
+    if (result.success) {
+      const video = db.prepare('SELECT * FROM videos WHERE id = ?').get(result.videoId);
+      res.json({ success: true, video: formatVideo(video) });
+    } else {
+      res.status(400).json(result);
+    }
+  } catch (error) {
+    console.error('Video add error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 function formatVideo(v) {
   const mins = v.duration ? Math.floor(v.duration / 60) : null;
   const secs = v.duration ? String(v.duration % 60).padStart(2, '0') : null;
