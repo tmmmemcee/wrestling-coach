@@ -1,18 +1,20 @@
 {
   "name": "wrestling-coach",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "version": "2.0.0",
+  "description": "Youth wrestling technique library with video search and lesson plans",
+  "main": "server.js",
   "scripts": {
     "start": "node server.js",
+    "dev": "node server.js",
+    "seed": "node scripts/seed.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": ["wrestling", "coaching", "video", "lesson-plans"],
+  "author": "Tim",
   "license": "ISC",
   "dependencies": {
     "better-sqlite3": "^12.6.2",
     "express": "^5.2.1",
-    "node-fetch": "^3.3.2"
+    "nostr-tools": "^2.10.0"
   }
 }
