@@ -56,10 +56,54 @@
       <a class="nav-link" href="/matches.html">Matches</a>
       <a class="nav-link" href="/lesson-plans.html">Lesson Plans</a>
       <a class="nav-link" href="/coaches.html">Coaches</a>
+      <a class="nav-link" href="/documentaries.html">Documentaries</a>
       <a class="nav-link" href="/admin.html">Admin</a>
+      <a class="nav-link" href="#" onclick="showAuthModal(); return false;">
+        <i class="bi bi-person-circle"></i> Sign in with Nostr
+      </a>
     </div>
   </div>
 </nav>
+
+<!-- Auth Modal -->
+<div class="modal fade" id="authModal" tabindex="-1" style="display: none; z-index: 9999;">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="background: var(--card); color: white;">
+      <div class="modal-header" style="border-color: var(--primary);">
+        <h5 class="modal-title">
+          <i class="bi bi-person-circle" style="color: var(--primary);"></i> Sign in with Nostr
+        </h5>
+        <button type="button" class="btn-close btn-close-white" onclick="closeAuthModal()"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted">
+          Sign in with your existing Nostr identity to save likes, bookmarks, and lesson plans.
+        </p>
+        
+        <div class="alert alert-info">
+          <i class="bi bi-info-circle"></i> 
+          No email. No password. Just your Nostr identity.
+        </div>
+        
+        <button class="btn btn-wrestling w-100 mb-2" onclick="signInWithNostr()">
+          <i class="bi bi-key"></i> Sign in with Nostr Key
+        </button>
+        
+        <p class="text-muted small text-center mb-3">
+          Enter your nsec private key (found in your Nostr app like Damus, Amethyst, etc.)
+        </p>
+        
+        <div class="text-center">
+          <a href="https://nsec.app" target="_blank" class="text-muted small">
+            <i class="bi bi-question-circle"></i> Where do I find my nsec?
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/auth.js"></script>
 
 <div class="hero">
   <div class="container">
@@ -296,11 +340,17 @@ function showTopRated() {
     .catch(() => search());
 }
 
-function render(videos) {
+async function render(videos) {
   const div = document.getElementById('results');
   if (!videos.length) {
     div.innerHTML = `<div class="text-center py-5 text-muted">No videos found.</div>`;
     return;
+  }
+  
+  // Load user's liked state (if logged in)
+  const videoIds = videos.map(v => v.id);
+  if (currentUser) {
+    loadUserVideoState(videoIds).catch(console.error);
   }
   
   div.innerHTML = `
@@ -335,8 +385,12 @@ function render(videos) {
                   📋 Add to Plan
                 </button>
                 <div>
-                  <button class="btn btn-sm vote-btn vote-up" onclick="vote(${v.id}, 'up')">👍 ${v.upvotes || 0}</button>
-                  <button class="btn btn-sm vote-btn vote-down" onclick="vote(${v.id}, 'down')">👎 ${v.downvotes || 0}</button>
+                  <button class="btn btn-sm vote-btn vote-up" id="likeBtn-${v.id}" onclick="toggleLike(${v.id}, this)">
+                    ❤️ ${v.upvotes || 0}
+                  </button>
+                  <button class="btn btn-sm btn-outline-light" id="bookmarkBtn-${v.id}" onclick="toggleBookmark(${v.id}, this)">
+                    <i class="bi bi-bookmark"></i> Save
+                  </button>
                 </div>
               </div>
             </div>
@@ -482,6 +536,9 @@ document.getElementById('videoModal').addEventListener('hide.bs.modal', () => {
 
 // Load on page load
 search();
+
+// The auth.js functions are already global since they're loaded via script tag
+// No need to re-export
 </script>
 </body>
 </html>

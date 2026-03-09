@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Documentaries - Wrestling Coach</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+  <style>
+    :root {
+      --primary: #e94560;
+      --dark: #1a1a2e;
+      --darker: #16213e;
+      --card: #0f3460;
+      --gold: #ffd700;
+      --silver: #c0c0c0;
+    }
+    body { 
+      background: var(--dark); 
+      color: #eee; 
+      font-family: 'Segoe UI', sans-serif; 
+    }
+    .navbar { 
+      background: var(--darker); 
+      border-bottom: 3px solid var(--primary); 
+    }
+    .navbar-brand { 
+      color: var(--primary) !important; 
+      font-weight: bold; 
+      font-size: 1.4rem;
+    }
+    .nav-link { 
+      color: rgba(255,255,255,.7) !important; 
+    }
+    .nav-link:hover { 
+      color: var(--primary) !important; 
+    }
+    .nav-link.active { 
+      color: var(--primary) !important; 
+      font-weight: bold; 
+    }
+    .hero { 
+      background: linear-gradient(135deg, var(--darker) 0%, var(--card) 100%); 
+      padding: 3rem 0; 
+      text-align: center;
+    }
+    .hero h1 { 
+      color: var(--primary); 
+      font-size: 2.5rem; 
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+    }
+    .hero p { 
+      color: #aaa; 
+      font-size: 1.1rem;
+    }
+    .card { 
+      background: var(--card); 
+      border: none;
+      border-radius: 12px;
+      overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .card:hover { 
+      transform: translateY(-4px);
+      box-shadow: 0 8px 20px rgba(233, 69, 96, 0.2);
+    }
+    .card-img-top {
+      height: 200px;
+      object-fit: cover;
+    }
+    .card-body {
+      padding: 1.25rem;
+    }
+    .card-title {
+      color: var(--primary);
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+    .btn-wrestling { 
+      background: var(--primary); 
+      border-color: var(--primary); 
+      color: white;
+      border-radius: 8px;
+      font-weight: 600;
+      padding: 0.6rem 1.5rem;
+      transition: all 0.2s;
+    }
+    .btn-wrestling:hover { 
+      background: #c73652; 
+      border-color: #c73652; 
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(233, 69, 96, 0.3);
+    }
+    .badge {
+      font-weight: 500;
+    }
+    .badge.documentary {
+      background: linear-gradient(135deg, var(--gold), #ff8c00);
+      color: #000;
+      font-weight: 600;
+    }
+    .badge.legends {
+      background: linear-gradient(135deg, var(--silver), #999);
+      color: #000;
+    }
+    .rating-bar {
+      height: 6px;
+      background: var(--darker);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-top: 0.5rem;
+    }
+    .rating-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--gold));
+      border-radius: 3px;
+    }
+    .documentary-badge {
+      background: var(--gold);
+      color: #000;
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 0.8rem;
+    }
+    .filter-chip {
+      display: inline-block;
+      padding: 0.4rem 1rem;
+      border-radius: 20px;
+      border: 2px solid var(--primary);
+      color: var(--primary);
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .filter-chip:hover,
+    .filter-chip.active {
+      background: var(--primary);
+      color: white;
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg">
+  <div class="container">
+    <a class="navbar-brand" href="/">🤼 Wrestling Coach</a>
+    <div class="navbar-nav ms-auto">
+      <a class="nav-link" href="/">Home</a>
+      <a class="nav-link" href="/matches.html">Matches</a>
+      <a class="nav-link" href="/lesson-plans.html">Lesson Plans</a>
+      <a class="nav-link" href="/coaches.html">Coaches</a>
+      <a class="nav-link active" href="/documentaries.html">Documentaries</a>
+      <a class="nav-link" href="/admin.html">Admin</a>
+    </div>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="container">
+    <div class="documentary-badge mb-3">
+      <i class="bi bi-film"></i> WRESTLING DOCUMENTARIES
+    </div>
+    <h1>🎬 Wrestling Stories</h1>
+    <p class="lead mb-4" style="color:#aaa;">Legendary careers, historic matches, and the stories behind the sport</p>
+    
+    <div class="d-flex justify-content-center gap-2 flex-wrap">
+      <button class="filter-chip active" onclick="filterByCategory('all')">📺 All Documentaries</button>
+      <button class="filter-chip" onclick="filterByCategory('Olympics')">🏅 Olympic Champions</button>
+      <button class="filter-chip" onclick="filterByCategory('College')">🎓 College Wrestling</button>
+      <button class="filter-chip" onclick="filterByCategory('Legends')">⭐ Legends</button>
+      <button class="filter-chip" onclick="filterByCategory('History')">📚 History</button>
+    </div>
+  </div>
+</div>
+
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="mb-0" style="color: var(--primary);">
+      <i class="bi bi-play-circle"></i> All Documentaries
+    </h3>
+    <span class="text-muted">
+      <i class="bi bi-info-circle"></i> Click any documentary to watch on YouTube
+    </span>
+  </div>
+  
+  <div id="docsList" class="row g-4">
+    <div class="col-12 text-center py-5">
+      <div class="spinner-border" style="color: var(--primary);" role="status"></div>
+      <p class="mt-3 text-muted">Loading documentaries...</p>
+    </div>
+  </div>
+</div>
+
+<!-- Watch Modal -->
+<div class="modal fade" id="watchModal" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content" style="background:var(--darker);">
+      <div class="modal-body p-0">
+        <div id="videoContainer"></div>
+        <div class="p-3">
+          <h5 class="text-white" id="docTitle"></h5>
+          <div class="mt-2">
+            <button class="btn btn-outline-light me-2" onclick="shareDocumentary()">
+              <i class="bi bi-share"></i> Share
+            </button>
+            <button class="btn btn-wrestling" onclick="saveForLater()">
+              <i class="bi bi-bookmark"></i> Save for Later
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+let currentCategory = 'all';
+const watchModal = new bootstrap.Modal(document.getElementById('watchModal'));
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadDocumentaries();
+});
+
+async function loadDocumentaries() {
+  const res = await fetch(`/api/documentaries`);
+  const docs = await res.json();
+  
+  const div = document.getElementById('docsList');
+  
+  if (!docs.length) {
+    div.innerHTML = `
+      <div class="col-12 text-center py-5">
+        <i class="bi bi-film" style="font-size: 4rem; color: #444;"></i>
+        <h4 class="mt-4">No documentaries yet</h4>
+        <p class="text-muted">We're building our documentary collection. Check back soon!</p>
+      </div>`;
+    return;
+  }
+  
+  // Group by category
+  const categorized = docs.reduce((acc, doc) => {
+    const cat = doc.category || 'General';
+    if (!acc[cat]) acc[cat] = [];
+    acc[cat].push(doc);
+    return acc;
+  }, {});
+  
+  let html = '';
+  
+  for (const [category, categoryDocs] of Object.entries(categorized)) {
+    html += `
+      <div class="mb-5 docs-category" data-category="${category.toLowerCase()}">
+        <h4 class="mb-3" style="color: var(--primary);">
+          ${getCategoryIcon(category)} ${category}
+          <span class="badge bg-secondary ms-2">${categoryDocs.length}</span>
+        </h4>
+        <div class="row g-4">
+          ${categoryDocs.map(doc => createDocCard(doc)).join('')}
+        </div>
+      </div>
+    `;
+  }
+  
+  div.innerHTML = html;
+}
+
+function getCategoryIcon(cat) {
+  const icons = {
+    'olympics': '🏅',
+    'college': '🎓',
+    'legends': '⭐',
+    'history': '📚',
+    'general': '📺'
+  };
+  return icons[cat.toLowerCase()] || '📺';
+}
+
+function createDocCard(doc) {
+  const rating = doc.rating || 0;
+  const percent = Math.max(0, Math.min(100, (rating + 50) * 50)); // Scale from -50 to +50 to 0-100%
+  
+  return `
+    <div class="col-md-6 col-lg-4 col-xl-3">
+      <div class="card h-100" onclick="watchDocumentary('${doc.youtube_id}', '${doc.title.replace(/'/g, "\\'")}')">
+        <img src="${doc.thumbnail_url}" class="card-img-top" alt="${doc.title}" onerror="this.src='https://via.placeholder.com/320x180?text=Documentary'">
+        <div class="card-body">
+          <h5 class="card-title">${doc.title}</h5>
+          <div class="d-flex align-items-center mb-2">
+            ${doc.channel ? `<span class="text-muted small"><i class="bi bi-person"></i> ${doc.channel}</span>` : ''}
+            ${doc.duration_formatted ? `<span class="mx-2 text-muted small"><i class="bi bi-clock"></i> ${doc.duration_formatted}</span>` : ''}
+          </div>
+          
+          ${doc.category ? `
+            <div class="mb-2">
+              ${doc.category === 'Olympics' ? '<span class="badge legends">Olympic</span>' : 
+                doc.category === 'College' ? '<span class="badge folklore">College</span>' :
+                doc.category === 'Legends' ? '<span class="badge legends">Legend</span>' :
+                `<span class="badge bg-secondary">${doc.category}</span>`}
+            </div>
+          ` : ''}
+          
+          ${doc.styles ? `
+            <div class="mb-2">
+              ${doc.styles.split(',').map(s => `<span class="badge badge-xs" style="font-size:0.7rem">${s}</span>`).join(' ')}
+            </div>
+          ` : ''}
+          
+          ${doc.content_type === 'documentary' ? 
+            '<span class="badge documentary mt-2"><i class="bi bi-film"></i> Documentary</span>' : ''}
+          
+          <div class="rating-bar mt-2">
+            <div class="rating-fill" style="width: ${percent}%"></div>
+          </div>
+          <small class="text-muted">Rating: ${doc.upvotes - doc.downvotes || 0}</small>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function watchDocumentary(videoId, title) {
+  document.getElementById('docTitle').textContent = title;
+  document.getElementById('videoContainer').innerHTML = `
+    <iframe 
+      width="100%" 
+      height="500" 
+      src="https://www.youtube.com/embed/${videoId}" 
+      frameborder="0" 
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+      allowfullscreen
+    ></iframe>
+  `;
+  watchModal.show();
+}
+
+function filterByCategory(category) {
+  currentCategory = category;
+  
+  // Update active state
+  document.querySelectorAll('.filter-chip').forEach(chip => {
+    chip.classList.remove('active');
+    if (chip.textContent.includes(category === 'all' ? 'All' : category)) {
+      chip.classList.add('active');
+    }
+  });
+  
+  // Filter videos
+  const allCategories = document.querySelectorAll('.docs-category');
+  
+  if (category === 'all') {
+    allCategories.forEach(cat => cat.style.display = 'block');
+  } else {
+    allCategories.forEach(cat => {
+      const catName = cat.dataset.category;
+      cat.style.display = catName === category.toLowerCase() ? 'block' : 'none';
+    });
+  }
+}
+
+function shareDocumentary() {
+  const url = window.location.href.split('?')[0];
+  navigator.clipboard.writeText(url);
+  alert('Link copied to clipboard!');
+  watchModal.hide();
+}
+
+function saveForLater() {
+  alert('Saved to your favorites! (Feature coming soon)');
+  watchModal.hide();
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,41 @@
+<!-- Nostr Auth Modal -->
+<div class="modal fade" id="authModal" tabindex="-1" style="display: none; z-index: 9999;">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="background: var(--card); color: white;">
+      <div class="modal-header" style="border-color: var(--primary);">
+        <h5 class="modal-title">
+          <i class="bi bi-person-circle" style="color: var(--primary);"></i> Sign in with Nostr
+        </h5>
+        <button type="button" class="btn-close btn-close-white" onclick="closeAuthModal()"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted">
+          Sign in with your existing Nostr identity to save likes, bookmarks, and lesson plans.
+        </p>
+        
+        <div class="alert alert-info">
+          <i class="bi bi-info-circle"></i> 
+          No email needed. No password. Just your Nostr identity.
+        </div>
+        
+        <h6>Choose how to sign in:</h6>
+        
+        <button class="btn btn-wrestling w-100 mb-2" onclick="signInWithNostr()">
+          <i class="bi bi-qr-code-scan"></i> Sign in with Key
+        </button>
+        
+        <p class="text-muted small text-center mb-3">
+          You'll be prompted to enter your nsec private key (find it in your Nostr app)
+        </p>
+        
+        <div class="text-center">
+          <a href="https://nsec.app" target="_blank" class="text-muted small">
+            <i class="bi bi-question-circle"></i> Where do I find my nsec?
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/auth.js"></script>

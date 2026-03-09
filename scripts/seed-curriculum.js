@@ -34,6 +34,8 @@ const curriculum = [
     description: "Establish proper wrestling stance and movement fundamentals",
     difficulty: "beginner",
     category: "fundamentals",
+    age_group: "elementary (6-10)",
+    style: "folkstyle",
     notes: "Core foundation - practice in front of mirror. Feet shoulder-width apart, knees bent, back straight, hands up. Each drill: 3 sets of 30 seconds.",
     videos: [
       { id: 26, notes: "Wrestling Stance For Beginners - Core foundation" },
@@ -47,6 +49,8 @@ const curriculum = [
     description: "Learn the fundamental shooting motion for all takedowns",
     difficulty: "beginner",
     category: "fundamentals",
+    age_group: "elementary (6-10)",
+    style: "folkstyle",
     notes: "Level change = bend knees, not waist. Penetration step should be explosive. Keep head up. Practice 10 reps each side.",
     videos: [
       { id: 130, notes: "Level Change - What NOT to do first" },
@@ -60,6 +64,8 @@ const curriculum = [
     description: "Learn to control ties and create scoring opportunities",
     difficulty: "beginner",
     category: "fundamentals",
+    age_group: "elementary (6-10)",
+    style: "folkstyle",
     notes: "Control the inside position. Keep elbows tight. Use head as a weapon. Create angles for shots.",
     videos: [
       { id: 33, notes: "Hand Fighting Blueprint - Core concepts" },
@@ -74,6 +80,8 @@ const curriculum = [
     description: "Master the most fundamental takedown in wrestling",
     difficulty: "beginner",
     category: "takedowns",
+    age_group: "elementary (6-10)",
+    style: "folkstyle",
     notes: "Penetration step to outside. Grab behind the knee. Put head on inside. Drive through the leg. Drill 20 reps each side.",
     videos: [
       { id: 2, notes: "Perfect Single Leg for Beginners - Best beginner breakdown" },
@@ -86,6 +94,8 @@ const curriculum = [
     description: "Learn wrestling's most explosive takedown",
     difficulty: "beginner",
     category: "takedowns",
+    age_group: "elementary (6-10)",
+    style: "folkstyle",
     notes: "Change level BEFORE shooting. Head to the side, not chest. Grab behind both knees. Drive and lift. Drill 15 reps each side.",
     videos: [
       { id: 4, notes: "Double Leg Take Down Basics - Simple, clear instruction" },
@@ -98,6 +108,8 @@ const curriculum = [
     description: "Learn to stop shots and create counter opportunities",
     difficulty: "beginner",
     category: "defense",
+    age_group: "elementary (6-10)",
+    style: "folkstyle",
     notes: "Hips DOWN when opponent shoots. Hands on shoulders. Spin behind for 2 points. Never get flattened. Drill sprawls: 3 sets of 10.",
     videos: [
       { id: 21, notes: "Sprawl by Ben Askren - Best sprawl instruction" },
@@ -112,6 +124,8 @@ const curriculum = [
     description: "Master the most important escape from bottom position",
     difficulty: "beginner",
     category: "escapes",
+    age_group: "elementary (6-10)",
+    style: "folkstyle",
     notes: "Create space first. Stand up in one motion. Hand control is key. Don't get pulled back down. Drill 15 reps each side.",
     videos: [
       { id: 95, notes: "Stand Up Escape Basics - Foundation of all escapes" },
@@ -124,6 +138,8 @@ const curriculum = [
     description: "Learn alternative escapes when stand-up isn't available",
     difficulty: "beginner",
     category: "escapes",
+    age_group: "elementary (6-10)",
+    style: "folkstyle",
     notes: "Sit-out when opponent rides high. Turn in to face opponent. Switch when opponent reaches. Always be moving on bottom.",
     videos: [
       { id: 98, notes: "Sit Out, Turn In, Back Door - Multiple escape options" },
@@ -136,6 +152,8 @@ const curriculum = [
     description: "Learn wrestling's most basic and effective pinning combination",
     difficulty: "beginner",
     category: "pins",
+    age_group: "elementary (6-10)",
+    style: "folkstyle",
     notes: "Control the wrist first. Slide arm under arm. Apply pressure with forearm. Walk toward opponent's head. Drill 20 reps.",
     videos: [
       { id: 13, notes: "Youth Wrestling Half Nelson Pin - Specifically for youth" },
@@ -154,8 +172,8 @@ db.exec("DELETE FROM lesson_plans");
 console.log("Adding 9 lesson plans...");
 
 const insertPlan = db.prepare(`
-  INSERT INTO lesson_plans (name, description, difficulty, category, age_group, notes, is_template)
-  VALUES (?, ?, ?, ?, ?, ?, 1)
+  INSERT INTO lesson_plans (name, description, difficulty, category, age_group, style, notes, is_template)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 `);
 
 const insertVideo = db.prepare(`
@@ -169,8 +187,10 @@ for (const lesson of curriculum) {
     lesson.description,
     lesson.difficulty,
     lesson.category,
-    'elementary (6-10)',
-    lesson.notes
+    lesson.age_group,
+    lesson.style,
+    lesson.notes,
+    1
   );
   
   const planId = result.lastInsertRowid;

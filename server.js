@@ -1,6 +1,7 @@
 const express = require('express');
 const Database = require('better-sqlite3');
 const path = require('path');
+const * as nostrTools from 'nostr-tools';
 
 const app = express();
 const PORT = process.env.PORT || 3737;
@@ -21,9 +22,11 @@ db.exec(`CREATE TABLE IF NOT EXISTS videos (
   position TEXT,
   difficulty TEXT,
   age_group TEXT DEFAULT 'elementary (6-10)',
-  style TEXT DEFAULT 'folkstyle',
-  category TEXT,
+  style TEXT DEFAULT 'folkstyle'
+  , styles TEXT,
+  is_pro_wrestling INTEGER DEFAULT 0,
   content_type TEXT DEFAULT 'technique',
+  category TEXT,
   tags TEXT,
   upvotes INTEGER DEFAULT 0,
   downvotes INTEGER DEFAULT 0,
@@ -46,6 +49,7 @@ db.exec(`CREATE TABLE IF NOT EXISTS lesson_plans (
   difficulty TEXT DEFAULT 'beginner',
   category TEXT,
   age_group TEXT DEFAULT 'elementary (6-10)',
+  style TEXT DEFAULT 'folkstyle',
   notes TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   is_template INTEGER DEFAULT 0
@@ -63,9 +67,14 @@ db.exec(`CREATE TABLE IF NOT EXISTS plan_videos (
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'static')));
+// Serve auth.js for all pages
+app.use((req, res, next) => {
+  next();
+});
 
 app.get('/api/search', (req, res) => {
-  const { q = '', move_type = '', position = '', difficulty = '', category = '', content_type = '', coach = '' } = req.query;
+  const { q = '', move_type = '', position = '', difficulty = '', category = '', content_type = '', coach = '', style = '', limit = '100' } = req.query;
   let conditions = ['1=1'];
   let params = [];
 
@@ -78,10 +87,25 @@ app.get('/api/search', (req, res) => {
   if (position) { conditions.push(`position = ?`); params.push(position); }
   if (difficulty) { conditions.push(`difficulty = ?`); params.push(difficulty); }
   if (category) { conditions.push(`category = ?`); params.push(category); }
-  if (content_type) { conditions.push(`content_type = ?`); params.push(content_type); }
+  
+  // Filter by content type (technique, documentary, interview, match, etc.)
+  if (content_type) { 
+    conditions.push(`content_type = ?`); 
+    params.push(content_type); 
+  }
+  
   if (coach) { conditions.push(`coach_name LIKE ?`); params.push(`%${coach}%`); }
+  
+  // New: Filter by style
+  if (style && style !== 'all') {
+    conditions.push(`styles LIKE ?`);
+    params.push(`%${style}%`);
+  }
+  
+  // Exclude pro wrestling by default (unless specifically requested)
+  conditions.push(`is_pro_wrestling = 0`);
 
-  const sql = `SELECT * FROM videos WHERE ${conditions.join(' AND ')} ORDER BY rating DESC, upvotes DESC, indexed_at DESC LIMIT 60`;
+  const sql = `SELECT * FROM videos WHERE ${conditions.join(' AND ')} ORDER BY rating DESC, upvotes DESC, indexed_at DESC LIMIT ${parseInt(limit)}`;
   const videos = db.prepare(sql).all(...params);
   res.json(videos.map(formatVideo));
 });
@@ -92,8 +116,19 @@ app.get('/api/categories', (req, res) => {
 });
 
 app.get('/api/content_types', (req, res) => {
-  const types = db.prepare('SELECT DISTINCT content_type FROM videos WHERE content_type IS NOT NULL').all();
+  const types = db.prepare('SELECT DISTINCT content_type FROM videos WHERE content_type IS NOT NULL ORDER BY content_type').all();
   res.json(types.map(t => t.content_type));
+});
+
+// New: Get all documentaries
+app.get('/api/documentaries', (req, res) => {
+  const documentaries = db.prepare(`
+    SELECT * FROM videos 
+    WHERE content_type = 'documentary' 
+    AND is_pro_wrestling = 0
+    ORDER BY rating DESC, upvotes DESC
+  `).all();
+  res.json(documentaries.map(formatVideo));
 });
 
 app.get('/api/coaches', (req, res) => {
@@ -139,12 +174,12 @@ app.get('/api/lesson-plans/:id', (req, res) => {
 });
 
 app.post('/api/lesson-plans', (req, res) => {
-  const { name, description, difficulty, category, age_group, notes, videos, is_template } = req.body;
+  const { name, description, difficulty, category, age_group, notes, videos, is_template, style } = req.body;
   
   const dbPlan = db.prepare(`
-    INSERT INTO lesson_plans (name, description, difficulty, category, age_group, notes, is_template)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
-  `).run(name, description, difficulty, category, age_group, notes, is_template ? 1 : 0);
+    INSERT INTO lesson_plans (name, description, difficulty, category, age_group, notes, is_template, style)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(name, description, difficulty, category, age_group, notes, is_template ? 1 : 0, style || 'folkstyle');
   
   const planId = dbPlan.lastInsertRowid;
   
@@ -204,8 +239,15 @@ app.post('/api/plan-videos/:planId/reorder', (req, res) => {
 });
 
 app.post('/api/vote/:id', (req, res) => {
-  const { vote } = req.body;
+  const { vote, action } = req.body; // action: 'increment' or 'toggle'
   const videoId = req.params.id;
+  
+  if (vote === 'up' && action === 'toggle') {
+    // Toggle logic: just return current state, client handles storage
+    const video = db.prepare('SELECT * FROM videos WHERE id = ?').get(videoId);
+    res.json(formatVideo(video));
+    return;
+  }
   
   const col = vote === 'up' ? 'upvotes' : 'downvotes';
   db.prepare(`UPDATE videos SET ${col} = ${col} + 1, rating = upvotes - downvotes WHERE id = ?`).run(videoId);
@@ -238,6 +280,201 @@ app.get('/api/stats', (req, res) => {
     topCoaches: topCoaches.map(c => ({ name: c.coach_name, count: c.count })),
     lessonPlanCount
   });
+});
+
+// Nostr Auth Routes
+// Generate authentication challenge
+app.get('/api/nostr/challenge', (req, res) => {
+  const challengeId = Date.now().toString(36) + Math.random().toString(36).substr(2);
+  const challengeText = `Sign this to authenticate with Wrestling Coach: ${challengeId}`;
+  
+  // Store challenge (simplified - in production use Redis/database)
+  req.app.locals.challenges = req.app.locals.challenges || new Map();
+  req.app.locals.challenges.set(challengeId, {
+    text: challengeText,
+    created: Date.now(),
+    expires: Date.now() + 5 * 60 * 1000 // 5 minutes
+  });
+  
+  res.json({
+    challengeId,
+    message: challengeText,
+    expires: Date.now() + 5 * 60 * 1000
+  });
+});
+
+// Verify authentication and create/login user
+app.post('/api/nostr/auth', (req, res) => {
+  const { event } = req.body;
+  
+  if (!event || !event.pubkey || !event.sig) {
+    return res.status(400).json({ error: 'Invalid event' });
+  }
+  
+  // Verify the signature
+  if (!nostrTools.verifyEvent(event)) {
+    return res.status(401).json({ error: 'Invalid signature' });
+  }
+  
+  // Extract challenge from event tags
+  const challengeTag = event.tags.find(tag => tag[0] === 'challenge');
+  if (!challengeTag) {
+    return res.status(400).json({ error: 'No challenge in event' });
+  }
+  
+  const challengeId = challengeTag[1];
+  const challenges = req.app.locals.challenges || new Map();
+  const challenge = challenges.get(challengeId);
+  
+  if (!challenge) {
+    return res.status(400).json({ error: 'Challenge not found' });
+  }
+  
+  if (Date.now() > challenge.expires) {
+    challenges.delete(challengeId);
+    return res.status(400).json({ error: 'Challenge expired' });
+  }
+  
+  challenges.delete(challengeId);
+  
+  // Create or get user
+  const npub = nostrTools.npubEncode(Buffer.from(event.pubkey, 'hex'));
+  
+  const existingUser = db.prepare('SELECT * FROM users WHERE npub = ?').get(npub);
+  
+  if (existingUser) {
+    // Update last login
+    db.prepare('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE npub = ?').run(npub);
+    res.json({
+      success: true,
+      user: {
+        npub,
+        display_name: existingUser.display_name,
+        logged_in_at: existingUser.last_login
+      }
+    });
+  } else {
+    // Create new user
+    const displayName = `User ${npub.slice(0, 8)}...`;
+    db.prepare('INSERT INTO users (npub, display_name) VALUES (?, ?)').run(npub, displayName);
+    
+    res.json({
+      success: true,
+      user: {
+        npub,
+        display_name: displayName,
+        created_at: Date.now()
+      }
+    });
+  }
+});
+
+// Check if user is logged in
+app.get('/api/nostr/authenticated', (req, res) => {
+  const npub = req.headers['x-npub'];
+  
+  if (!npub) {
+    return res.json({ authenticated: false });
+  }
+  
+  const user = db.prepare('SELECT npub, display_name, last_login FROM users WHERE npub = ?').get(npub);
+  res.json({
+    authenticated: !!user,
+    user: user || null
+  });
+});
+
+// Add like for user
+app.post('/api/like/:videoId', (req, res) => {
+  const npub = req.headers['x-npub'];
+  const videoId = req.params.videoId;
+  
+  if (!npub) {
+    return res.status(401).json({ error: 'Not authenticated' });
+  }
+  
+  try {
+    // Check if already liked
+    const existing = db.prepare('SELECT id FROM user_likes WHERE npub = ? AND video_id = ?').get(npub, videoId);
+    
+    if (existing) {
+      // Remove like (toggle off)
+      db.prepare('DELETE FROM user_likes WHERE npub = ? AND video_id = ?').run(npub, videoId);
+      res.json({ liked: false });
+    } else {
+      // Add like
+      db.prepare('INSERT INTO user_likes (npub, video_id) VALUES (?, ?)').run(npub, videoId);
+      // Also increment global upvote count
+      db.prepare('UPDATE videos SET upvotes = upvotes + 1, rating = upvotes - downvotes WHERE id = ?').run(videoId);
+      res.json({ liked: true });
+    }
+  } catch (error) {
+    console.error('Like error:', error);
+    res.status(500).json({ error: 'Failed to toggle like' });
+  }
+});
+
+// Get user's liked videos
+app.get('/api/user/likes', (req, res) => {
+  const npub = req.headers['x-npub'];
+  
+  if (!npub) {
+    return res.json({ likes: [] });
+  }
+  
+  const likes = db.prepare(`
+    SELECT v.*, ul.liked_at
+    FROM user_likes ul
+    JOIN videos v ON ul.video_id = v.id
+    WHERE ul.npub = ?
+    ORDER BY ul.liked_at DESC
+  `).all(npub);
+  
+  res.json({ likes: likes.map(formatVideo) });
+});
+
+// Add bookmark for user
+app.post('/api/bookmark/:videoId', (req, res) => {
+  const npub = req.headers['x-npub'];
+  const videoId = req.params.videoId;
+  
+  if (!npub) {
+    return res.status(401).json({ error: 'Not authenticated' });
+  }
+  
+  try {
+    const existing = db.prepare('SELECT id FROM user_bookmarks WHERE npub = ? AND video_id = ?').get(npub, videoId);
+    
+    if (existing) {
+      db.prepare('DELETE FROM user_bookmarks WHERE npub = ? AND video_id = ?').run(npub, videoId);
+      res.json({ bookmarked: false });
+    } else {
+      db.prepare('INSERT INTO user_bookmarks (npub, video_id) VALUES (?, ?)').run(npub, videoId);
+      res.json({ bookmarked: true });
+    }
+  } catch (error) {
+    console.error('Bookmark error:', error);
+    res.status(500).json({ error: 'Failed to toggle bookmark' });
+  }
+});
+
+// Get user's bookmarks
+app.get('/api/user/bookmarks', (req, res) => {
+  const npub = req.headers['x-npub'];
+  
+  if (!npub) {
+    return res.json({ bookmarks: [] });
+  }
+  
+  const bookmarks = db.prepare(`
+    SELECT v.*, ub.bookmarked_at
+    FROM user_bookmarks ub
+    JOIN videos v ON ub.video_id = v.id
+    WHERE ub.npub = ?
+    ORDER BY ub.bookmarked_at DESC
+  `).all(npub);
+  
+  res.json({ bookmarks: bookmarks.map(formatVideo) });
 });
 
 // Manual video addition API
