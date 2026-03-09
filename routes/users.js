@@ -2,28 +2,28 @@
  * User data routes (likes, bookmarks) for Wrestling Coach
  */
 
-const { userQueries, videoQueries } = require('../db');
+const { queries } = require('../db');
 const { formatVideo } = require('./videos');
 const { Router } = require('express');
 const router = Router();
 
 // Toggle like
-router.post('/like/:videoId', (req, res) => {
+router.post('/like/:videoId', async (req, res) => {
   const npub = req.headers['x-npub'];
-  const videoId = req.params.videoId;
+  const videoId = parseInt(req.params.videoId);
   
   if (!npub) {
     return res.status(401).json({ error: 'Not authenticated' });
   }
   
   try {
-    const existing = userQueries.getLike.get(npub, videoId);
+    const existing = await queries.getLike(npub, videoId);
     
     if (existing) {
-      userQueries.removeLike.run(npub, videoId);
+      await queries.removeLike(npub, videoId);
       res.json({ liked: false });
     } else {
-      userQueries.addLike.run(npub, videoId);
+      await queries.addLike(npub, videoId);
       res.json({ liked: true });
     }
   } catch (error) {
@@ -33,34 +33,38 @@ router.post('/like/:videoId', (req, res) => {
 });
 
 // Get user's likes
-router.get('/user/likes', (req, res) => {
+router.get('/user/likes', async (req, res) => {
   const npub = req.headers['x-npub'];
   
   if (!npub) {
     return res.json({ likes: [] });
   }
   
-  const likes = userQueries.getLikes.all(npub);
-  res.json({ likes: likes.map(formatVideo) });
+  try {
+    const likes = await queries.getLikes(npub);
+    res.json({ likes: likes.map(formatVideo) });
+  } catch (e) {
+    res.json({ likes: [] });
+  }
 });
 
 // Toggle bookmark
-router.post('/bookmark/:videoId', (req, res) => {
+router.post('/bookmark/:videoId', async (req, res) => {
   const npub = req.headers['x-npub'];
-  const videoId = req.params.videoId;
+  const videoId = parseInt(req.params.videoId);
   
   if (!npub) {
     return res.status(401).json({ error: 'Not authenticated' });
   }
   
   try {
-    const existing = userQueries.getBookmark.get(npub, videoId);
+    const existing = await queries.getBookmark(npub, videoId);
     
     if (existing) {
-      userQueries.removeBookmark.run(npub, videoId);
+      await queries.removeBookmark(npub, videoId);
       res.json({ bookmarked: false });
     } else {
-      userQueries.addBookmark.run(npub, videoId);
+      await queries.addBookmark(npub, videoId);
       res.json({ bookmarked: true });
     }
   } catch (error) {
@@ -70,15 +74,19 @@ router.post('/bookmark/:videoId', (req, res) => {
 });
 
 // Get user's bookmarks
-router.get('/user/bookmarks', (req, res) => {
+router.get('/user/bookmarks', async (req, res) => {
   const npub = req.headers['x-npub'];
   
   if (!npub) {
     return res.json({ bookmarks: [] });
   }
   
-  const bookmarks = userQueries.getBookmarks.all(npub);
-  res.json({ bookmarks: bookmarks.map(formatVideo) });
+  try {
+    const bookmarks = await queries.getBookmarks(npub);
+    res.json({ bookmarks: bookmarks.map(formatVideo) });
+  } catch (e) {
+    res.json({ bookmarks: [] });
+  }
 });
 
 module.exports = { router };

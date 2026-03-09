@@ -2,11 +2,11 @@
  * Nostr authentication routes for Wrestling Coach
  */
 
-const { userQueries } = require('../db');
+const { queries } = require('../db');
 const { Router } = require('express');
 const router = Router();
 
-// Store challenges in memory (in production, use Redis or similar)
+// Store challenges in memory
 const challenges = new Map();
 
 // Generate authentication challenge
@@ -17,14 +17,12 @@ router.get('/nostr/challenge', (req, res) => {
   challenges.set(challengeId, {
     text: challengeText,
     created: Date.now(),
-    expires: Date.now() + 5 * 60 * 1000 // 5 minutes
+    expires: Date.now() + 5 * 60 * 1000
   });
   
-  // Clean up expired challenges
+  // Clean expired
   for (const [id, challenge] of challenges) {
-    if (Date.now() > challenge.expires) {
-      challenges.delete(id);
-    }
+    if (Date.now() > challenge.expires) challenges.delete(id);
   }
   
   res.json({
@@ -34,18 +32,14 @@ router.get('/nostr/challenge', (req, res) => {
   });
 });
 
-// Verify authentication and create/login user
-router.post('/nostr/auth', (req, res) => {
+// Verify authentication
+router.post('/nostr/auth', async (req, res) => {
   const { event } = req.body;
   
   if (!event || !event.pubkey || !event.sig) {
     return res.status(400).json({ error: 'Invalid event' });
   }
   
-  // Note: In production, verify the signature with nostr-tools
-  // For now, we trust the event structure
-  
-  // Extract challenge from event tags
   const challengeTag = event.tags?.find(tag => tag[0] === 'challenge');
   if (!challengeTag) {
     return res.status(400).json({ error: 'No challenge in event' });
@@ -54,61 +48,64 @@ router.post('/nostr/auth', (req, res) => {
   const challengeId = challengeTag[1];
   const challenge = challenges.get(challengeId);
   
-  if (!challenge) {
-    return res.status(400).json({ error: 'Challenge not found or expired' });
-  }
-  
-  if (Date.now() > challenge.expires) {
+  if (!challenge || Date.now() > challenge.expires) {
     challenges.delete(challengeId);
-    return res.status(400).json({ error: 'Challenge expired' });
+    return res.status(400).json({ error: 'Challenge not found or expired' });
   }
   
   challenges.delete(challengeId);
   
-  // Create npub from pubkey (hex to bech32)
-  // For simplicity, we'll use the hex pubkey directly
   const npub = event.pubkey;
   
-  const existingUser = userQueries.getByNpub.get(npub);
-  
-  if (existingUser) {
-    userQueries.updateLogin.run(npub);
-    res.json({
-      success: true,
-      user: {
-        npub,
-        display_name: existingUser.display_name,
-        logged_in_at: existingUser.last_login
-      }
-    });
-  } else {
-    const displayName = `User ${npub.slice(0, 8)}...`;
-    userQueries.create.run(npub, displayName);
+  try {
+    const existingUser = await queries.getUserByNpub(npub);
     
-    res.json({
-      success: true,
-      user: {
-        npub,
-        display_name: displayName,
-        created_at: Date.now()
-      }
-    });
+    if (existingUser) {
+      await queries.updateLogin(npub);
+      res.json({
+        success: true,
+        user: {
+          npub,
+          display_name: existingUser.display_name,
+          logged_in_at: existingUser.last_login
+        }
+      });
+    } else {
+      const displayName = `User ${npub.slice(0, 8)}...`;
+      await queries.createUser(npub, displayName);
+      
+      res.json({
+        success: true,
+        user: {
+          npub,
+          display_name: displayName,
+          created_at: Date.now()
+        }
+      });
+    }
+  } catch (e) {
+    console.error('Auth error:', e);
+    res.status(500).json({ error: 'Authentication failed' });
   }
 });
 
-// Check if user is authenticated
-router.get('/nostr/authenticated', (req, res) => {
+// Check authentication
+router.get('/nostr/authenticated', async (req, res) => {
   const npub = req.headers['x-npub'];
   
   if (!npub) {
     return res.json({ authenticated: false });
   }
   
-  const user = userQueries.getByNpub.get(npub);
-  res.json({
-    authenticated: !!user,
-    user: user || null
-  });
+  try {
+    const user = await queries.getUserByNpub(npub);
+    res.json({
+      authenticated: !!user,
+      user: user || null
+    });
+  } catch (e) {
+    res.json({ authenticated: false });
+  }
 });
 
 module.exports = { router };
