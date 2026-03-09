@@ -20,6 +20,7 @@ function formatVideo(v) {
 // Search videos
 router.get('/search', async (req, res) => {
   const { q = '', move_type = '', position = '', difficulty = '', category = '', content_type = '', coach = '', style = '', limit = '100' } = req.query;
+  const npub = req.headers['x-npub'];
   
   let conditions = ['1=1'];
   let params = [];
@@ -54,6 +55,22 @@ router.get('/search', async (req, res) => {
 
   try {
     const videos = await queries.searchVideos(conditions, params, parseInt(limit));
+    
+    // If user is logged in, sort liked videos to top
+    if (npub) {
+      const likes = await queries.getLikes(npub);
+      const likedIds = new Set(likes.map(l => l.id));
+      
+      // Sort: liked videos first, then by rating
+      videos.sort((a, b) => {
+        const aLiked = likedIds.has(a.id);
+        const bLiked = likedIds.has(b.id);
+        if (aLiked && !bLiked) return -1;
+        if (!aLiked && bLiked) return 1;
+        return (b.rating || 0) - (a.rating || 0);
+      });
+    }
+    
     res.json(videos.map(formatVideo));
   } catch (e) {
     console.error('Search error:', e);

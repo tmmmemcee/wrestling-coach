@@ -324,7 +324,12 @@ function search(category = '') {
       <p class="mt-2 text-muted">Loading...</p>
     </div>`;
   
-  fetch('/api/search?' + params)
+  // Get auth header if logged in
+  const headers = {};
+  const user = window.getCurrentUser ? window.getCurrentUser() : null;
+  if (user) headers['x-npub'] = user.npub;
+  
+  fetch('/api/search?' + params, { headers })
     .then(r => r.json())
     .then(render)
     .catch(() => {
@@ -334,7 +339,11 @@ function search(category = '') {
 }
 
 function showTopRated() {
-  fetch('/api/stats')
+  const headers = {};
+  const user = window.getCurrentUser ? window.getCurrentUser() : null;
+  if (user) headers['x-npub'] = user.npub;
+  
+  fetch('/api/stats', { headers })
     .then(r => r.json())
     .then(data => render(data.topRated))
     .catch(() => search());
@@ -348,9 +357,10 @@ async function render(videos) {
   }
   
   // Load user's liked state (if logged in)
-  const videoIds = videos.map(v => v.id);
-  if (currentUser) {
-    loadUserVideoState(videoIds).catch(console.error);
+  const user = window.getCurrentUser ? window.getCurrentUser() : null;
+  if (user) {
+    const videoIds = videos.map(v => v.id);
+    window.loadUserVideoState(videoIds).catch(console.error);
   }
   
   div.innerHTML = `
