@@ -3,118 +3,110 @@
 let currentUser = null;
 let nostrTools = null;
 
-// Load nostr-tools from CDN
+// Load nostr-tools from esm.sh (browser ES modules)
 async function loadNostrTools() {
-  if (window.nostrTools) return;
+  if (nostrTools) return nostrTools;
   
   try {
-    const script = document.createElement('script');
-    script.src = 'https://cdn.jsdelivr.net/npm/nostr-tools@2.0.0/index.min.js';
-    script.onload = () => { 
-      window.nostrTools = window.require('nostr-tools');
-      nostrTools = window.nostrTools;
-      console.log('Nostr-tools loaded');
-    };
-    document.head.appendChild(script);
+    nostrTools = await import('https://esm.sh/nostr-tools@2.10.0');
+    console.log('✅ Nostr-tools loaded');
+    return nostrTools;
   } catch (e) {
     console.error('Failed to load nostr-tools:', e);
+    throw e;
   }
 }
 
-// Initialize auth on page load
+// Initialize on page load
 document.addEventListener('DOMContentLoaded', async () => {
-  await loadNostrTools();
   await checkAuthStatus();
-  if (currentUser) {
-    // If user is logged in, we might want to load their liked/bookmarked state
-    // This can be done by individual pages
-    console.log('User logged in, loading their state');
-  }
 });
 
 // Show login modal
-async function showAuthModal() {
-  document.getElementById('authModal').classList.add('show');
-  document.getElementById('authModal').style.display = 'block';
-  
-  if (!nostrTools) {
-    await loadNostrTools();
+function showAuthModal() {
+  const modal = document.getElementById('authModal');
+  if (modal) {
+    modal.classList.add('show');
+    modal.style.display = 'block';
   }
 }
 
-// Hide login modal (when outside clicked)
-document.addEventListener('click', (e) => {
+// Close auth modal
+function closeAuthModal() {
   const modal = document.getElementById('authModal');
-  if (e.target === modal) {
+  if (modal) {
     modal.classList.remove('show');
     modal.style.display = 'none';
+  }
+}
+
+// Click outside to close
+document.addEventListener('click', (e) => {
+  if (e.target?.id === 'authModal') {
+    closeAuthModal();
   }
 });
 
 // Sign in with Nostr
 async function signInWithNostr() {
-  if (!nostrTools) {
-    alert('Nostr tools not loaded yet. Please try again.');
-    return;
-  }
-  
   try {
+    const { nip19, getPublicKey, finalizeEvent } = await loadNostrTools();
+    
     // Get challenge from server
     const challengeResp = await fetch('/api/nostr/challenge');
-    const challengeData = await challengeResp.json();
-    const challengeId = challengeData.challengeId;
+    const { challengeId } = await challengeResp.json();
+    console.log('Got challenge:', challengeId);
     
-    console.log('Challenge:', challengeId);
-    
-    // Try to sign with browser extension first
     let event;
     
+    // Try browser extension (Alby, nos2x, etc.)
     if (window.nostr) {
-      // Use browser extension
-      const { event: extEvent } = await window.nostr.signEvent({
+      console.log('Using browser extension...');
+      event = await window.nostr.signEvent({
         kind: 22242,
-        tags: [['challenge', challengeId], ['app', 'wrestling-coach']],
-        content: `Sign this to authenticate: ${challengeId}`,
-        created_at: Math.floor(Date.now() / 1000)
+        created_at: Math.floor(Date.now() / 1000),
+        tags: [['challenge', challengeId]],
+        content: `Authenticate: ${challengeId}`
       });
-      event = extEvent;
     } else {
-      // No extension - ask user for their nsec
-      const nsec = prompt('Enter your nsec private key to sign in:\n(you can find this in your Nostr app)\n\nExample: nsec1...');
+      // Manual nsec entry
+      const nsec = prompt(
+        'Enter your nsec private key:\n\n' +
+        '(Found in your Nostr app - Damus, Amethyst, Primal, etc.)\n\n' +
+        'Example: nsec1...'
+      );
       
       if (!nsec) {
-        alert('No key provided. Please enter your nsec.');
+        alert('No key provided.');
         return;
       }
       
       // Decode nsec
-      const privateKey = nostrTools.nsecDecode(nsec).data;
-      const publicKey = nostrTools.getPublicKey(privateKey);
+      let privateKeyBytes;
+      try {
+        const decoded = nip19.decode(nsec);
+        if (decoded.type !== 'nsec') throw new Error('Not an nsec');
+        privateKeyBytes = decoded.data;
+      } catch (e) {
+        alert('Invalid nsec key. Check and try again.');
+        return;
+      }
       
-      // Sign the event
-      const sig = nostrTools.schnorr.Sign(
-        nostrTools.sha256(new Uint8Array(Buffer.from(JSON.stringify([
-          0,
-          publicKey,
-          Math.floor(Date.now() / 1000),
-          22242,
-          [['challenge', challengeId], ['app', 'wrestling-coach']],
-          `Sign this to authenticate: ${challengeId}`
-        ])))),
-        privateKey
-      );
-      
-      event = {
+      // Build and sign event
+      const unsignedEvent = {
         kind: 22242,
         created_at: Math.floor(Date.now() / 1000),
-        pubkey: Buffer.from(publicKey).toString('hex'),
-        tags: [['challenge', challengeId], ['app', 'wrestling-coach']],
-        content: `Sign this to authenticate: ${challengeId}`,
-        sig: Buffer.from(sig).toString('hex')
+        tags: [['challenge', challengeId]],
+        content: `Authenticate: ${challengeId}`,
+        pubkey: getPublicKey(privateKeyBytes)
       };
+      
+      event = finalizeEvent(unsignedEvent, privateKeyBytes);
     }
     
-    // Send signed event to server
+    console.log('Signed event:', event);
+    
+    // Send to server
     const authResp = await fetch('/api/nostr/auth', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -128,77 +120,63 @@ async function signInWithNostr() {
       localStorage.setItem('wrestlingCoachNpub', currentUser.npub);
       closeAuthModal();
       updateAuthUI();
-      alert('✅ Signed in successfully!');
+      alert('✅ Signed in!');
     } else {
-      alert('❌ Authentication failed: ' + authData.error);
+      alert('❌ Failed: ' + authData.error);
     }
     
   } catch (error) {
     console.error('Auth error:', error);
-    alert('❌ Error signing in: ' + error.message);
+    alert('❌ Error: ' + error.message);
   }
 }
 
-// Check if user is logged in (from localStorage)
+// Check if logged in
 async function checkAuthStatus() {
   const storedNpub = localStorage.getItem('wrestlingCoachNpub');
   
   if (storedNpub) {
-    const authResp = await fetch('/api/nostr/authenticated', {
-      headers: { 'x-npub': storedNpub }
-    });
-    const data = await authResp.json();
-    
-    if (data.authenticated) {
-      currentUser = data.user;
-      updateAuthUI();
-      return;
+    try {
+      const resp = await fetch('/api/nostr/authenticated', {
+        headers: { 'x-npub': storedNpub }
+      });
+      const data = await resp.json();
+      
+      if (data.authenticated) {
+        currentUser = data.user;
+        updateAuthUI();
+        return;
+      }
+    } catch (e) {
+      console.error('Auth check error:', e);
     }
   }
   
-  // Not logged in, show login button
   updateAuthUI();
 }
 
-// Close auth modal
-function closeAuthModal() {
-  document.getElementById('authModal').classList.remove('show');
-  document.getElementById('authModal').style.display = 'none';
-}
-
-// Update auth UI based on login status
+// Update UI
 function updateAuthUI() {
   const nav = document.querySelector('.navbar-nav');
+  if (!nav) return;
+  
+  // Remove existing auth elements
+  nav.querySelectorAll('[data-auth]').forEach(el => el.remove());
   
   if (currentUser) {
-    // User is logged in
-    const html = `
-      <a class="nav-link" href="/my-likes.html">
-        <i class="bi bi-heart"></i> My Likes
+    nav.insertAdjacentHTML('afterbegin', `
+      <a class="nav-link" data-auth href="/my-likes.html"><i class="bi bi-heart"></i> Likes</a>
+      <a class="nav-link" data-auth href="/my-bookmarks.html"><i class="bi bi-bookmark"></i> Bookmarks</a>
+      <a class="nav-link" data-auth href="#" onclick="signOut(); return false;">
+        <i class="bi bi-person"></i> ${currentUser.display_name || 'User'}
       </a>
-      <a class="nav-link" href="/my-bookmarks.html">
-        <i class="bi bi-bookmark"></i> Bookmarks
-      </a>
-      <a class="nav-link badge bg-primary" href="#" onclick="signOut(); return false;">
-        <i class="bi bi-person"></i> ${currentUser.display_name}
-      </a>
-    `;
-    nav.innerHTML = html + nav.innerHTML;
+    `);
   } else {
-    // User not logged in
-    const html = `
-      <a class="nav-link badge bg-primary" href="#" onclick="showAuthModal(); return false;">
+    nav.insertAdjacentHTML('afterbegin', `
+      <a class="nav-link" data-auth href="#" onclick="showAuthModal(); return false;">
         <i class="bi bi-person-circle"></i> Sign in with Nostr
       </a>
-    `;
-    
-    // Find the sign-in button and replace it
-    const existingAuth = document.querySelector('a[href="#"], a[onclick*="showAuthModal"]');
-    if (existingAuth) {
-      existingAuth.outerHTML = html;
-    } else {
-      nav.innerHTML = html + nav.innerHTML;
-    }
+    `);
   }
 }
 
@@ -206,139 +184,110 @@ function updateAuthUI() {
 function signOut() {
   localStorage.removeItem('wrestlingCoachNpub');
   currentUser = null;
-  updateAuthUI();
-  alert('Logged out successfully!');
+  window.location.reload();
 }
 
-// Helper: Get current auth header
+// Auth header helper
 function getAuthHeader() {
-  if (!currentUser) return {};
-  return { 'x-npub': currentUser.npub };
+  return currentUser ? { 'x-npub': currentUser.npub } : {};
 }
 
-// Helper: Toggle like (persisted)
+// Toggle like
 async function toggleLike(videoId, btnElement) {
   if (!currentUser) {
-    alert('Please sign in with Nostr to like videos!');
+    alert('Please sign in to like videos!');
     showAuthModal();
     return;
   }
   
-  // If btnElement wasn't passed, try to find it
-  if (!btnElement) {
-    btnElement = document.getElementById(`likeBtn-${videoId}`);
-  }
+  if (!btnElement) btnElement = document.getElementById(`likeBtn-${videoId}`);
   
-  const res = await fetch(`/api/like/${videoId}`, {
-    method: 'POST',
-    headers: { 
-      'Content-Type': 'application/json',
-      ...getAuthHeader()
+  try {
+    const resp = await fetch(`/api/like/${videoId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...getAuthHeader() }
+    });
+    const data = await resp.json();
+    
+    if (btnElement) {
+      btnElement.classList.toggle('active', data.liked);
+      btnElement.style.background = data.liked ? '#dc3545' : '';
+      btnElement.innerHTML = data.liked ? '❤️ Liked' : '❤️ Like';
     }
-  });
-  
-  const data = await res.json();
-  
-  if (data.liked) {
-    btnElement.classList.add('active');
-    btnElement.style.background = '#dc3545';
-    btnElement.style.borderColor = '#dc3545';
-    btnElement.innerHTML = '❤️ Liked';
-  } else {
-    btnElement.classList.remove('active');
-    btnElement.style.background = '';
-    btnElement.style.borderColor = '';
-    btnElement.innerHTML = '❤️ Like';
+  } catch (e) {
+    console.error('Like error:', e);
   }
 }
 
-// Helper: Toggle bookmark (persisted)
-async function toggleBookmark(videoId, element) {
+// Toggle bookmark
+async function toggleBookmark(videoId, btnElement) {
   if (!currentUser) {
-    alert('Please sign in with Nostr to bookmark!');
+    alert('Please sign in to bookmark!');
     showAuthModal();
     return;
   }
   
-  const res = await fetch(`/api/bookmark/${videoId}`, {
-    method: 'POST',
-    headers: { 
-      'Content-Type': 'application/json',
-      ...getAuthHeader()
+  if (!btnElement) btnElement = document.getElementById(`bookmarkBtn-${videoId}`);
+  
+  try {
+    const resp = await fetch(`/api/bookmark/${videoId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...getAuthHeader() }
+    });
+    const data = await resp.json();
+    
+    if (btnElement) {
+      btnElement.classList.toggle('active', data.bookmarked);
+      btnElement.style.background = data.bookmarked ? '#17a2b8' : '';
+      btnElement.innerHTML = data.bookmarked ? '🔖 Saved' : '📑 Save';
     }
-  });
-  
-  const data = await res.json();
-  
-  if (data.bookmarked) {
-    element.classList.add('active');
-    element.innerHTML = '<i class="bi bi-bookmark-fill"></i> Saved';
-    alert('💾 Saved to bookmarks!');
-  } else {
-    element.classList.remove('active');
-    element.innerHTML = '<i class="bi bi-bookmark"></i> Save';
-    alert('Bookmark removed!');
+  } catch (e) {
+    console.error('Bookmark error:', e);
   }
 }
 
-// Helper: Update video like count in UI
-function updateVideoLikeCount(videoId, delta) {
-  const likeButton = document.querySelector(`button[data-video-id="${videoId}"][data-type="up"]`);
-  if (likeButton) {
-    const countEl = likeButton.querySelector('.count');
-    const current = parseInt(countEl.textContent) || 0;
-    countEl.textContent = current + delta;
-  }
-}
-
-// Load user's liked/video state for all videos on page
+// Load user state for videos on page
 async function loadUserVideoState(videoIds) {
   if (!currentUser || !videoIds?.length) return;
   
-  // Load liked videos
-  const res = await fetch('/api/user/likes', {
-    headers: { 'x-npub': currentUser.npub }
-  });
-  const data = await res.json();
-  const likedIds = new Set(data.likes.map(l => l.id));
-  
-  // Load bookmarked videos
-  const bookmarkRes = await fetch('/api/user/bookmarks', {
-    headers: { 'x-npub': currentUser.npub }
-  });
-  const bookmarkData = await bookmarkRes.json();
-  const bookmarkedIds = new Set(bookmarkData.bookmarks.map(b => b.id));
-  
-  // Update UI for liked buttons
-  videoIds.forEach(id => {
-    const likeBtn = document.getElementById(`likeBtn-${id}`);
-    if (likeBtn && likedIds.has(id)) {
-      likeBtn.classList.add('active');
-      likeBtn.style.background = '#dc3545';
-      likeBtn.style.borderColor = '#dc3545';
-      likeBtn.innerHTML = '❤️ ' + (likeBtn.innerHTML.replace(/[\d]/g, ''));
-    }
+  try {
+    const [likesResp, bookmarksResp] = await Promise.all([
+      fetch('/api/user/likes', { headers: getAuthHeader() }),
+      fetch('/api/user/bookmarks', { headers: getAuthHeader() })
+    ]);
     
-    const bookmarkBtn = document.getElementById(`bookmarkBtn-${id}`);
-    if (bookmarkBtn && bookmarkedIds.has(id)) {
-      bookmarkBtn.classList.add('active');
-      bookmarkBtn.style.background = '#17a2b8';
-      bookmarkBtn.style.borderColor = '#17a2b8';
-      bookmarkBtn.innerHTML = '<i class="bi bi-bookmark-fill"></i> Saved';
-    }
-  });
+    const { likes = [] } = await likesResp.json();
+    const { bookmarks = [] } = await bookmarksResp.json();
+    
+    const likedIds = new Set(likes.map(l => l.id));
+    const bookmarkedIds = new Set(bookmarks.map(b => b.id));
+    
+    videoIds.forEach(id => {
+      const likeBtn = document.getElementById(`likeBtn-${id}`);
+      if (likeBtn && likedIds.has(id)) {
+        likeBtn.classList.add('active');
+        likeBtn.style.background = '#dc3545';
+        likeBtn.innerHTML = '❤️ Liked';
+      }
+      
+      const bookmarkBtn = document.getElementById(`bookmarkBtn-${id}`);
+      if (bookmarkBtn && bookmarkedIds.has(id)) {
+        bookmarkBtn.classList.add('active');
+        bookmarkBtn.style.background = '#17a2b8';
+        bookmarkBtn.innerHTML = '🔖 Saved';
+      }
+    });
+  } catch (e) {
+    console.error('Load state error:', e);
+  }
 }
 
-// Export for use in other scripts
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = {
-    showAuthModal,
-    signInWithNostr,
-    signOut,
-    toggleLike,
-    toggleBookmark,
-    getAuthHeader,
-    checkAuthStatus,
-    loadUserVideoState
-  };
-}
+// Expose globally
+window.showAuthModal = showAuthModal;
+window.closeAuthModal = closeAuthModal;
+window.signInWithNostr = signInWithNostr;
+window.signOut = signOut;
+window.toggleLike = toggleLike;
+window.toggleBookmark = toggleBookmark;
+window.loadUserVideoState = loadUserVideoState;
+window.getCurrentUser = () => currentUser;
